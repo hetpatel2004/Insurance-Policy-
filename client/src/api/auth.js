@@ -33,6 +33,15 @@ const parseResponse = async (res) => {
   } catch {
     data = null;
   }
+  if (res.status === 401) {
+    if (getToken()) {
+      clearAuth();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    throw new Error(data?.message || 'Session expired. Please log in again.');
+  }
   if (!res.ok) {
     const msg = data?.message || 'Something went wrong. Please try again.';
     throw new Error(msg);
@@ -88,6 +97,10 @@ export const updateProfile = (userData) => request('/profile', {
 
 // Admin: users
 export const getUsers = () => request('/users');
+export const createUser = (userData) => request('/users', {
+  method: 'POST',
+  body: JSON.stringify(userData),
+});
 export const updateUser = (id, userData) => request(`/users/${id}`, {
   method: 'PUT',
   body: JSON.stringify(userData),

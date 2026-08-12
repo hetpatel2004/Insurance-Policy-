@@ -12,6 +12,49 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
+// @desc    Create a new user (admin)
+// @route   POST /api/auth/users
+const createUser = async (req, res) => {
+  try {
+    const { firstName, lastName, aadharNumber, email, phone, password, role, isVerified } = req.body;
+
+    if (!firstName || !lastName || !aadharNumber || !email || !password) {
+      return res.status(400).json({ message: 'First name, last name, Aadhar number, email and password are required' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    const aadharExists = await User.findOne({ aadharNumber });
+    if (aadharExists) {
+      return res.status(400).json({ message: 'Aadhar number already registered' });
+    }
+
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const user = await User.create({
+      firstName,
+      lastName,
+      aadharNumber,
+      email,
+      phone,
+      password,
+      role: role === 'admin' ? 'admin' : 'user',
+      isVerified: typeof isVerified === 'boolean' ? isVerified : true,
+    });
+
+    res.status(201).json(sanitizeUser(user));
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Aadhar number or email already registered' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get all users
 // @route   GET /api/auth/users
 const getUsers = async (req, res) => {
@@ -84,4 +127,4 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, getUserById, updateUser, deleteUser };
+module.exports = { getUsers, getUserById, createUser, updateUser, deleteUser };

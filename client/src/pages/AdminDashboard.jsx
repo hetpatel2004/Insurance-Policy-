@@ -10,7 +10,7 @@ import {
 import DashboardLayout from '../components/DashboardLayout'
 import { StatCard, PageHeader, StatusBadge, EmptyState } from '../components/dashboard/Widgets'
 import {
-  getUsers, updateUser, deleteUser, getAllPolicies, updatePolicy, deletePolicy, getUser,
+  getUsers, createUser, updateUser, deleteUser, getAllPolicies, updatePolicy, deletePolicy, getUser,
   getCompanies, createCompany, updateCompany, deleteCompany,
   getCustomers, createCustomer, updateCustomer, deleteCustomer,
 } from '../api/auth'
@@ -47,6 +47,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [editUser, setEditUser] = useState(null)
   const [showEditUser, setShowEditUser] = useState(false)
+  const [showCreateUser, setShowCreateUser] = useState(false)
   const [showEditPolicy, setShowEditPolicy] = useState(false)
   const [editPolicy, setEditPolicy] = useState(null)
   const [editCompany, setEditCompany] = useState(null)
@@ -117,6 +118,24 @@ const AdminDashboard = () => {
       })
       setShowEditUser(false)
       notifySuccess('User updated')
+      loadData()
+    } catch (err) { notifyError(err.message) }
+  }
+
+  const saveNewUser = async (e) => {
+    e.preventDefault()
+    try {
+      await createUser({
+        firstName: e.target.firstName.value,
+        lastName: e.target.lastName.value,
+        aadharNumber: e.target.aadharNumber.value,
+        email: e.target.email.value,
+        phone: e.target.phone.value,
+        password: e.target.password.value,
+        role: e.target.role.value,
+      })
+      setShowCreateUser(false)
+      notifySuccess('User created')
       loadData()
     } catch (err) { notifyError(err.message) }
   }
@@ -364,7 +383,14 @@ const AdminDashboard = () => {
       <PageHeader
         title="User Management"
         subtitle="Manage all registered users, roles and verification status."
-        badge={<Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: 'var(--primary-light)' }}>{users.length} Users</Badge>}
+        badge={
+          <div className="d-flex align-items-center gap-2">
+            <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: 'var(--primary-light)' }}>{users.length} Users</Badge>
+            <Button className="rounded-pill gradient-bg border-0 px-3" onClick={() => setShowCreateUser(true)}>
+              <PlusCircleFill className="me-1" /> Add User
+            </Button>
+          </div>
+        }
       />
       <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
         <Card.Body style={{ padding: 0 }}>
@@ -710,6 +736,68 @@ const AdminDashboard = () => {
           <Modal.Footer style={{ borderTop: '1px solid var(--border)' }}>
             <Button variant="outline-light" className="rounded-pill" onClick={() => setShowEditUser(false)} style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-strong)' }}>Cancel</Button>
             <Button type="submit" className="rounded-pill gradient-bg border-0">Save Changes</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Create user modal */}
+      <Modal show={showCreateUser} onHide={() => setShowCreateUser(false)} centered contentClassName="glass-card" style={{ color: 'var(--text-primary)' }}>
+        <Modal.Header closeButton style={{ borderBottom: '1px solid var(--border)' }}>
+          <Modal.Title style={{ fontSize: '1.1rem', fontWeight: 700 }}>Add User</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={saveNewUser}>
+          <Modal.Body>
+            <div className="row g-3">
+              <div className="col-6">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>First Name *</Form.Label>
+                  <Form.Control name="firstName" required style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                </Form.Group>
+              </div>
+              <div className="col-6">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Last Name *</Form.Label>
+                  <Form.Control name="lastName" required style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Aadhar Number *</Form.Label>
+                  <Form.Control name="aadharNumber" required minLength={12} maxLength={12} pattern="\d{12}" placeholder="12-digit Aadhar" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', fontFamily: 'monospace' }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Email *</Form.Label>
+                  <Form.Control type="email" name="email" required style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Phone</Form.Label>
+                  <Form.Control name="phone" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Password *</Form.Label>
+                  <Form.Control type="password" name="password" required minLength={6} placeholder="At least 6 characters" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Role</Form.Label>
+                  <Form.Select name="role" defaultValue="user" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}>
+                    <option value="user" style={{ color: '#0f172a' }}>User</option>
+                    <option value="admin" style={{ color: '#0f172a' }}>Admin</option>
+                  </Form.Select>
+                </Form.Group>
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer style={{ borderTop: '1px solid var(--border)' }}>
+            <Button variant="outline-light" className="rounded-pill" onClick={() => setShowCreateUser(false)} style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-strong)' }}>Cancel</Button>
+            <Button type="submit" className="rounded-pill gradient-bg border-0">Create User</Button>
           </Modal.Footer>
         </Form>
       </Modal>

@@ -9,6 +9,7 @@ const {
 const {
   getUsers,
   getUserById,
+  createUser,
   updateUser,
   deleteUser,
 } = require('../controllers/adminController');
@@ -22,6 +23,7 @@ router.put('/profile', protect, updateProfile);
 // Admin only routes
 router.get('/users', protect, admin, getUsers);
 router.get('/users/:id', protect, admin, getUserById);
+router.post('/users', protect, admin, createUser);
 router.put('/users/:id', protect, admin, updateUser);
 router.delete('/users/:id', protect, admin, deleteUser);
 
