@@ -4,6 +4,7 @@ const {
   getCompanies,
   createCompany,
   updateCompany,
+  bulkCreateCompanies,
   deleteCompany,
 } = require('../controllers/companyController');
 const { protect, admin } = require('../middleware/authMiddleware');
@@ -13,6 +14,7 @@ router.get('/', protect, getCompanies);
 
 // Admin only
 router.post('/', protect, admin, createCompany);
+router.post('/bulk', protect, admin, bulkCreateCompanies);
 router.put('/:id', protect, admin, updateCompany);
 router.delete('/:id', protect, admin, deleteCompany);
 

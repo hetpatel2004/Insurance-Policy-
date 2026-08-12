@@ -5,17 +5,20 @@ import {
   Speedometer2, PeopleFill, FileEarmarkTextFill,
   PencilSquare, Trash, PersonFill, ShieldFillCheck,
   FileEarmarkText, ClockHistory, BuildingFill,
-  PersonBadgeFill, PlusCircleFill, XCircle
+  PersonBadgeFill, PlusCircleFill, XCircle, CloudUploadFill
 } from 'react-bootstrap-icons'
 import DashboardLayout from '../components/DashboardLayout'
 import { StatCard, PageHeader, StatusBadge, EmptyState } from '../components/dashboard/Widgets'
+import BulkUploadModal from '../components/dashboard/BulkUploadModal'
 import {
   getUsers, createUser, updateUser, deleteUser, getAllPolicies, updatePolicy, deletePolicy, getUser,
   getCompanies, createCompany, updateCompany, deleteCompany,
   getCustomers, createCustomer, updateCustomer, deleteCustomer,
+  bulkCreateUsers, bulkCreateCompanies, bulkCreateCustomers, bulkCreatePolicies,
 } from '../api/auth'
 import { notifySuccess, notifyError } from '../utils/toast'
 import { POLICY_TYPES, getPolicyLabel } from '../utils/policyTypes'
+import { parseCSVRows } from '../utils/csv'
 
 const navItems = [
   { key: 'overview', label: 'Overview', icon: Speedometer2 },
@@ -38,6 +41,33 @@ const emptyPolicyRow = () => ({
   status: 'active',
 })
 
+const bulkConfig = {
+  users: {
+    title: 'Bulk Upload Users',
+    subtitle: 'Each row creates a login account. Duplicate Aadhar/email rows are skipped.',
+    columns: ['firstName', 'lastName', 'aadharNumber', 'email', 'phone', 'password', 'role'],
+    sample: ['Rahul', 'Sharma', '444444444444', 'rahul@gmail.com', '+919876543210', 'user123', 'user'],
+  },
+  companies: {
+    title: 'Bulk Upload Companies',
+    subtitle: 'policyTypes = insurance types offered, separated by "|" (e.g. health|auto|travel).',
+    columns: ['name', 'email', 'phone', 'address', 'description', 'policyTypes'],
+    sample: ['New Insurer', 'support@newinsurer.com', '+911800000000', 'Mumbai, Maharashtra', 'General insurance provider', 'health|auto|travel'],
+  },
+  customers: {
+    title: 'Bulk Upload Customers',
+    subtitle: 'Upserts by Aadhar. One optional policy per row (company must already exist).',
+    columns: ['aadharNumber', 'name', 'email', 'phone', 'companyName', 'policyType', 'planName', 'premium', 'coverage', 'status'],
+    sample: ['555555555555', 'Priya Patel', 'priya@gmail.com', '+919876543211', 'HDFC ERGO', 'health', 'Family Health Gold', '4500', '500000', 'active'],
+  },
+  policies: {
+    title: 'Bulk Upload Policies',
+    subtitle: 'Creates policy applications. The user is found by Aadhar number.',
+    columns: ['aadharNumber', 'policyType', 'planName', 'premium', 'coverage', 'companyName', 'status'],
+    sample: ['444444444444', 'health', 'Family Health Gold', '4500', '500000', 'HDFC ERGO', 'pending'],
+  },
+}
+
 const AdminDashboard = () => {
   const [view, setView] = useState('overview')
   const [users, setUsers] = useState([])
@@ -55,6 +85,10 @@ const AdminDashboard = () => {
   const [editCustomer, setEditCustomer] = useState(null)
   const [showCustomerModal, setShowCustomerModal] = useState(false)
   const [customerPolicies, setCustomerPolicies] = useState([])
+  const [bulkTarget, setBulkTarget] = useState(null)
+  const [companyPolicyTypes, setCompanyPolicyTypes] = useState([])
+  const [newUserCompanyId, setNewUserCompanyId] = useState('')
+  const [newUserPolicyType, setNewUserPolicyType] = useState('')
 
   const admin = getUser()
 
@@ -122,8 +156,20 @@ const AdminDashboard = () => {
     } catch (err) { notifyError(err.message) }
   }
 
+  const openCreateUser = () => {
+    setNewUserCompanyId('')
+    setNewUserPolicyType('')
+    setShowCreateUser(true)
+  }
+
   const saveNewUser = async (e) => {
     e.preventDefault()
+    const companyId = e.target.company.value
+    const policyType = e.target.policyType.value
+    if (companyId && !policyType) {
+      notifyError('Select the insurance type offered by the company')
+      return
+    }
     try {
       await createUser({
         firstName: e.target.firstName.value,
@@ -133,11 +179,34 @@ const AdminDashboard = () => {
         phone: e.target.phone.value,
         password: e.target.password.value,
         role: e.target.role.value,
+        companyId: companyId || undefined,
+        policyType: policyType || undefined,
+        planName: policyType ? `${getPolicyLabel(policyType)} Plan` : undefined,
       })
       setShowCreateUser(false)
       notifySuccess('User created')
       loadData()
     } catch (err) { notifyError(err.message) }
+  }
+
+  const toggleCompanyPolicyType = (type) => {
+    setCompanyPolicyTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type])
+  }
+
+  const handleBulkUpload = async (text) => {
+    const cfg = bulkConfig[bulkTarget]
+    const rows = parseCSVRows(text, cfg.columns)
+    if (rows.length === 0) {
+      notifyError('No data rows found. Check the CSV content.')
+      return { created: 0, updated: 0, skipped: 0, errors: [{ row: 0, error: 'No data rows found' }] }
+    }
+    let res
+    if (bulkTarget === 'users') res = await bulkCreateUsers(rows)
+    else if (bulkTarget === 'companies') res = await bulkCreateCompanies(rows)
+    else if (bulkTarget === 'customers') res = await bulkCreateCustomers(rows)
+    else if (bulkTarget === 'policies') res = await bulkCreatePolicies(rows)
+    loadData()
+    return res
   }
 
   const handlePolicyStatus = async (policy, status) => {
@@ -174,6 +243,7 @@ const AdminDashboard = () => {
   // ---- Companies ----
   const openCompanyModal = (company = null) => {
     setEditCompany(company)
+    setCompanyPolicyTypes(company?.policyTypes || [])
     setShowCompanyModal(true)
   }
 
@@ -186,6 +256,7 @@ const AdminDashboard = () => {
         phone: e.target.phone.value,
         address: e.target.address.value,
         description: e.target.description.value,
+        policyTypes: companyPolicyTypes,
       }
       if (editCompany) {
         await updateCompany(editCompany._id, data)
@@ -386,8 +457,11 @@ const AdminDashboard = () => {
         badge={
           <div className="d-flex align-items-center gap-2">
             <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: 'var(--primary-light)' }}>{users.length} Users</Badge>
-            <Button className="rounded-pill gradient-bg border-0 px-3" onClick={() => setShowCreateUser(true)}>
+            <Button className="rounded-pill gradient-bg border-0 px-3" onClick={openCreateUser}>
               <PlusCircleFill className="me-1" /> Add User
+            </Button>
+            <Button variant="outline-primary" className="rounded-pill px-3" onClick={() => setBulkTarget('users')} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
+              <CloudUploadFill className="me-1" /> Bulk Upload
             </Button>
           </div>
         }
@@ -488,7 +562,14 @@ const AdminDashboard = () => {
       <PageHeader
         title="Policy Management"
         subtitle="Review, approve or reject policy applications."
-        badge={<Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>{policies.length} Policies</Badge>}
+        badge={
+          <div className="d-flex align-items-center gap-2">
+            <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>{policies.length} Policies</Badge>
+            <Button variant="outline-primary" className="rounded-pill px-3" onClick={() => setBulkTarget('policies')} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
+              <CloudUploadFill className="me-1" /> Bulk Upload
+            </Button>
+          </div>
+        }
       />
       <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
         <Card.Body style={{ padding: 0 }}>
@@ -557,9 +638,14 @@ const AdminDashboard = () => {
         title="Insurance Companies"
         subtitle="Companies you have a tie-up with. These appear in customer and policy forms."
         badge={
-          <Button className="rounded-pill gradient-bg border-0 px-4" onClick={() => openCompanyModal()}>
-            <PlusCircleFill className="me-1" /> Add Company
-          </Button>
+          <div className="d-flex align-items-center gap-2">
+            <Button className="rounded-pill gradient-bg border-0 px-4" onClick={() => openCompanyModal()}>
+              <PlusCircleFill className="me-1" /> Add Company
+            </Button>
+            <Button variant="outline-primary" className="rounded-pill px-3" onClick={() => setBulkTarget('companies')} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
+              <CloudUploadFill className="me-1" /> Bulk Upload
+            </Button>
+          </div>
         }
       />
       <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
@@ -573,7 +659,8 @@ const AdminDashboard = () => {
                   <tr style={{ color: 'var(--text-muted-2)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
                     <th>Company</th>
                     <th className="d-none d-md-table-cell">Contact</th>
-                    <th className="d-none d-lg-table-cell">Description</th>
+                    <th className="d-none d-lg-table-cell">Insurance Types</th>
+                    <th className="d-none d-xl-table-cell">Description</th>
                     <th className="text-end">Actions</th>
                   </tr>
                 </thead>
@@ -595,7 +682,25 @@ const AdminDashboard = () => {
                         <div style={{ fontSize: '0.85rem' }}>{c.email || '—'}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{c.phone || '—'}</div>
                       </td>
-                      <td className="d-none d-lg-table-cell" style={{ fontSize: '0.85rem', maxWidth: '280px' }}>{c.description || '—'}</td>
+                      <td className="d-none d-lg-table-cell">
+                        {(c.policyTypes || []).length === 0 ? (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-2)' }}>—</span>
+                        ) : (
+                          <div className="d-flex flex-wrap gap-1" style={{ maxWidth: '280px' }}>
+                            {(c.policyTypes || []).slice(0, 3).map(t => (
+                              <span key={t} className="rounded-pill px-2 py-1" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: '#34d399', fontSize: '0.68rem', fontWeight: 600 }}>
+                                {getPolicyLabel(t)}
+                              </span>
+                            ))}
+                            {(c.policyTypes || []).length > 3 && (
+                              <span className="rounded-pill px-2 py-1" style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)', color: '#60a5fa', fontSize: '0.68rem', fontWeight: 600 }}>
+                                +{(c.policyTypes || []).length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="d-none d-xl-table-cell" style={{ fontSize: '0.85rem', maxWidth: '220px' }}>{c.description || '—'}</td>
                       <td>
                         <div className="d-flex justify-content-end gap-2">
                           <Button size="sm" variant="outline-primary" className="rounded-pill" onClick={() => openCompanyModal(c)} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
@@ -623,9 +728,14 @@ const AdminDashboard = () => {
         title="Customer List"
         subtitle="Record your clients by Aadhar. On login they'll see the policies they own."
         badge={
-          <Button className="rounded-pill gradient-bg border-0 px-4" onClick={() => openCustomerModal()}>
-            <PlusCircleFill className="me-1" /> Add Customer
-          </Button>
+          <div className="d-flex align-items-center gap-2">
+            <Button className="rounded-pill gradient-bg border-0 px-4" onClick={() => openCustomerModal()}>
+              <PlusCircleFill className="me-1" /> Add Customer
+            </Button>
+            <Button variant="outline-primary" className="rounded-pill px-3" onClick={() => setBulkTarget('customers')} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
+              <CloudUploadFill className="me-1" /> Bulk Upload
+            </Button>
+          </div>
         }
       />
       <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
@@ -793,6 +903,52 @@ const AdminDashboard = () => {
                   </Form.Select>
                 </Form.Group>
               </div>
+              <div className="col-12">
+                <div className="d-flex align-items-center gap-2 mb-1">
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: 0 }}>Assign Company & Insurance (optional)</Form.Label>
+                  <span className="rounded-pill px-2 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: '#60a5fa', fontSize: '0.65rem', fontWeight: 600 }}>Records them as your customer</span>
+                </div>
+                <Form.Select
+                  name="company"
+                  value={newUserCompanyId}
+                  onChange={e => { setNewUserCompanyId(e.target.value); setNewUserPolicyType('') }}
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}
+                >
+                  <option value="">Select company</option>
+                  {companies.map(c => (
+                    <option key={c._id} value={c._id} style={{ color: '#0f172a' }}>{c.name}</option>
+                  ))}
+                </Form.Select>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Insurance Type (from this company)</Form.Label>
+                  <Form.Select
+                    name="policyType"
+                    value={newUserPolicyType}
+                    onChange={e => setNewUserPolicyType(e.target.value)}
+                    disabled={!newUserCompanyId}
+                    style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}
+                  >
+                    {!newUserCompanyId && <option value="" style={{ color: '#0f172a' }}>Select a company first</option>}
+                    {newUserCompanyId && <option value="" style={{ color: '#0f172a' }}>Select insurance type</option>}
+                    {newUserCompanyId && (() => {
+                      const comp = companies.find(c => c._id === newUserCompanyId)
+                      const types = (comp?.policyTypes || []).length > 0 ? comp.policyTypes : POLICY_TYPES.map(p => p.type)
+                      return types.map(t => (
+                        <option key={t} value={t} style={{ color: '#0f172a' }}>{getPolicyLabel(t)}</option>
+                      ))
+                    })()}
+                  </Form.Select>
+                  {newUserCompanyId && (() => {
+                    const comp = companies.find(c => c._id === newUserCompanyId)
+                    if ((comp?.policyTypes || []).length === 0) {
+                      return <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)', marginTop: '4px' }}>This company has no insurance types set — showing all types. Edit the company to restrict its offerings.</div>
+                    }
+                    return null
+                  })()}
+                </Form.Group>
+              </div>
             </div>
           </Modal.Body>
           <Modal.Footer style={{ borderTop: '1px solid var(--border)' }}>
@@ -873,6 +1029,36 @@ const AdminDashboard = () => {
                 <Form.Group>
                   <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Description</Form.Label>
                   <Form.Control as="textarea" rows={2} defaultValue={editCompany?.description} name="description" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                    Insurance Types Offered <span style={{ color: '#f87171' }}>*</span>
+                  </Form.Label>
+                  <div className="d-flex flex-wrap gap-2">
+                    {POLICY_TYPES.map(pt => {
+                      const active = companyPolicyTypes.includes(pt.type)
+                      return (
+                        <Button
+                          key={pt.type}
+                          type="button"
+                          size="sm"
+                          onClick={() => toggleCompanyPolicyType(pt.type)}
+                          style={{
+                            borderRadius: '20px',
+                            border: active ? '1px solid rgba(52,211,153,0.5)' : '1px solid var(--border-strong)',
+                            background: active ? 'rgba(52,211,153,0.12)' : 'var(--input-bg)',
+                            color: active ? '#34d399' : 'var(--text-secondary)',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          {pt.label}
+                        </Button>
+                      )
+                    })}
+                  </div>
                 </Form.Group>
               </div>
             </div>
@@ -997,6 +1183,19 @@ const AdminDashboard = () => {
           </Modal.Footer>
         </Form>
       </Modal>
+
+      {/* Bulk upload modal */}
+      {bulkTarget && (
+        <BulkUploadModal
+          show={!!bulkTarget}
+          onHide={() => setBulkTarget(null)}
+          title={bulkConfig[bulkTarget].title}
+          subtitle={bulkConfig[bulkTarget].subtitle}
+          columns={bulkConfig[bulkTarget].columns}
+          sample={bulkConfig[bulkTarget].sample}
+          onUpload={handleBulkUpload}
+        />
+      )}
     </DashboardLayout>
   )
 }

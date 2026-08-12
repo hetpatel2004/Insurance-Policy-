@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { POLICY_TYPES } = require('../utils/policyTypes');
 
 const companySchema = new mongoose.Schema(
   {
@@ -26,6 +27,10 @@ const companySchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 500,
+    },
+    policyTypes: {
+      type: [{ type: String, enum: POLICY_TYPES, lowercase: true, trim: true }],
+      default: [],
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

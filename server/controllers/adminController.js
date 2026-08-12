@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Company = require('../models/Company');
+const Customer = require('../models/Customer');
 
 const sanitizeUser = (user) => ({
   _id: user._id,
@@ -16,7 +18,7 @@ const sanitizeUser = (user) => ({
 // @route   POST /api/auth/users
 const createUser = async (req, res) => {
   try {
-    const { firstName, lastName, aadharNumber, email, phone, password, role, isVerified } = req.body;
+    const { firstName, lastName, aadharNumber, email, phone, password, role, isVerified, companyId, policyType, planName } = req.body;
 
     if (!firstName || !lastName || !aadharNumber || !email || !password) {
       return res.status(400).json({ message: 'First name, last name, Aadhar number, email and password are required' });
@@ -35,6 +37,17 @@ const createUser = async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    let company = null;
+    if (companyId) {
+      company = await Company.findById(companyId);
+      if (!company) {
+        return res.status(400).json({ message: 'Selected company not found' });
+      }
+      if (company.policyTypes.length > 0 && policyType && !company.policyTypes.includes(policyType)) {
+        return res.status(400).json({ message: `${policyType} is not offered by ${company.name}` });
+      }
+    }
+
     const user = await User.create({
       firstName,
       lastName,
@@ -46,11 +59,105 @@ const createUser = async (req, res) => {
       isVerified: typeof isVerified === 'boolean' ? isVerified : true,
     });
 
+    // If a company (and insurance type) was chosen, record this user as a customer
+    // so they see their policy under that company after login.
+    if (company) {
+      const now = new Date();
+      const end = new Date(now);
+      end.setFullYear(end.getFullYear() + 1);
+
+      const customerPolicy = {
+        policyType,
+        planName: planName || `${company.name} ${policyType || ''} plan`,
+        company: company._id,
+        premium: 0,
+        coverage: 0,
+        startDate: now,
+        endDate: end,
+        status: 'active',
+      };
+
+      const existingCustomer = await Customer.findOne({ aadharNumber });
+      if (existingCustomer) {
+        existingCustomer.name = `${firstName} ${lastName}`;
+        existingCustomer.email = email || existingCustomer.email;
+        existingCustomer.phone = phone || existingCustomer.phone;
+        existingCustomer.company = company._id;
+        existingCustomer.policies.push(customerPolicy);
+        await existingCustomer.save();
+      } else {
+        await Customer.create({
+          aadharNumber,
+          name: `${firstName} ${lastName}`,
+          email,
+          phone,
+          company: company._id,
+          policies: [customerPolicy],
+          createdBy: req.user._id,
+        });
+      }
+    }
+
     res.status(201).json(sanitizeUser(user));
   } catch (error) {
     if (error.code === 11000) {
       return res.status(400).json({ message: 'Aadhar number or email already registered' });
     }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Bulk create users (admin)
+// @route   POST /api/auth/users/bulk
+const bulkCreateUsers = async (req, res) => {
+  try {
+    const { rows } = req.body;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ message: 'No user rows provided' });
+    }
+
+    let created = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      try {
+        const firstName = r.firstName;
+        const lastName = r.lastName;
+        const aadharNumber = r.aadharNumber;
+        const email = r.email;
+        const password = r.password || 'user123';
+        if (!firstName || !lastName || !aadharNumber || !email) {
+          skipped++;
+          errors.push({ row: i + 2, error: 'firstName, lastName, aadharNumber and email are required' });
+          continue;
+        }
+        const exists = await User.findOne({ $or: [{ aadharNumber }, { email }] });
+        if (exists) {
+          skipped++;
+          errors.push({ row: i + 2, error: 'Aadhar number or email already registered' });
+          continue;
+        }
+        await User.create({
+          firstName,
+          lastName,
+          aadharNumber,
+          email,
+          phone: r.phone,
+          password,
+          role: r.role === 'admin' ? 'admin' : 'user',
+          isVerified: true,
+        });
+        created++;
+      } catch (e) {
+        skipped++;
+        errors.push({ row: i + 2, error: e.message });
+      }
+    }
+
+    res.json({ created, skipped, errors });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
@@ -127,4 +234,4 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, getUserById, createUser, updateUser, deleteUser };
+module.exports = { getUsers, getUserById, createUser, bulkCreateUsers, updateUser, deleteUser };

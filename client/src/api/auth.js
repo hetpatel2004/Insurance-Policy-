@@ -101,6 +101,10 @@ export const createUser = (userData) => request('/users', {
   method: 'POST',
   body: JSON.stringify(userData),
 });
+export const bulkCreateUsers = (rows) => request('/users/bulk', {
+  method: 'POST',
+  body: JSON.stringify({ rows }),
+});
 export const updateUser = (id, userData) => request(`/users/${id}`, {
   method: 'PUT',
   body: JSON.stringify(userData),
@@ -123,6 +127,10 @@ export const updatePolicy = (id, policyData) => requestPolicy(`/${id}`, {
 export const deletePolicy = (id) => requestPolicy(`/${id}`, {
   method: 'DELETE',
 });
+export const bulkCreatePolicies = (rows) => requestPolicy('/bulk', {
+  method: 'POST',
+  body: JSON.stringify({ rows }),
+});
 
 // Companies
 export const getCompanies = () => requestCompany('/');
@@ -136,6 +144,10 @@ export const updateCompany = (id, companyData) => requestCompany(`/${id}`, {
 });
 export const deleteCompany = (id) => requestCompany(`/${id}`, {
   method: 'DELETE',
+});
+export const bulkCreateCompanies = (rows) => requestCompany('/bulk', {
+  method: 'POST',
+  body: JSON.stringify({ rows }),
 });
 
 // Customers (agent's client list)
@@ -151,6 +163,10 @@ export const updateCustomer = (id, customerData) => requestCustomer(`/${id}`, {
 });
 export const deleteCustomer = (id) => requestCustomer(`/${id}`, {
   method: 'DELETE',
+});
+export const bulkCreateCustomers = (rows) => requestCustomer('/bulk', {
+  method: 'POST',
+  body: JSON.stringify({ rows }),
 });
 
 export const logout = () => {

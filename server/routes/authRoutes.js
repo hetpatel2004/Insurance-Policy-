@@ -10,6 +10,7 @@ const {
   getUsers,
   getUserById,
   createUser,
+  bulkCreateUsers,
   updateUser,
   deleteUser,
 } = require('../controllers/adminController');
@@ -22,8 +23,9 @@ router.put('/profile', protect, updateProfile);
 
 // Admin only routes
 router.get('/users', protect, admin, getUsers);
-router.get('/users/:id', protect, admin, getUserById);
+router.post('/users/bulk', protect, admin, bulkCreateUsers);
 router.post('/users', protect, admin, createUser);
+router.get('/users/:id', protect, admin, getUserById);
 router.put('/users/:id', protect, admin, updateUser);
 router.delete('/users/:id', protect, admin, deleteUser);
 

@@ -1,4 +1,7 @@
 const Policy = require('../models/Policy');
+const User = require('../models/User');
+const Company = require('../models/Company');
+const { POLICY_TYPES } = require('../utils/policyTypes');
 
 // @desc    Apply for a policy (user)
 // @route   POST /api/policies
@@ -100,4 +103,73 @@ const deletePolicy = async (req, res) => {
   }
 };
 
-module.exports = { createPolicy, getMyPolicies, getPolicies, updatePolicy, deletePolicy };
+// @desc    Bulk create policy applications (admin)
+// @route   POST /api/policies/bulk
+const bulkCreatePolicies = async (req, res) => {
+  try {
+    const { rows } = req.body;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ message: 'No policy rows provided' });
+    }
+
+    let created = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      try {
+        if (!r.aadharNumber) {
+          skipped++;
+          errors.push({ row: i + 2, error: 'aadharNumber is required' });
+          continue;
+        }
+        const user = await User.findOne({ aadharNumber: r.aadharNumber });
+        if (!user) {
+          skipped++;
+          errors.push({ row: i + 2, error: `No user found with Aadhar ${r.aadharNumber}` });
+          continue;
+        }
+        const type = (r.policyType || '').toLowerCase();
+        if (!type || !r.planName || !r.premium || !r.coverage) {
+          skipped++;
+          errors.push({ row: i + 2, error: 'policyType, planName, premium and coverage are required' });
+          continue;
+        }
+        if (!POLICY_TYPES.includes(type)) {
+          skipped++;
+          errors.push({ row: i + 2, error: `"${r.policyType}" is not a valid insurance type` });
+          continue;
+        }
+        let company = null;
+        if (r.companyName) {
+          company = await Company.findOne({ name: r.companyName });
+          if (!company) {
+            skipped++;
+            errors.push({ row: i + 2, error: `Company "${r.companyName}" not found` });
+            continue;
+          }
+        }
+        await Policy.create({
+          user: user._id,
+          policyType: type,
+          planName: r.planName,
+          premium: Number(r.premium) || 0,
+          coverage: Number(r.coverage) || 0,
+          company: company ? company._id : null,
+          status: r.status || 'pending',
+        });
+        created++;
+      } catch (e) {
+        skipped++;
+        errors.push({ row: i + 2, error: e.message });
+      }
+    }
+
+    res.json({ created, skipped, errors });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createPolicy, getMyPolicies, getPolicies, updatePolicy, bulkCreatePolicies, deletePolicy };

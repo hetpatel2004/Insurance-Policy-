@@ -5,6 +5,7 @@ const {
   getMyCustomer,
   createCustomer,
   updateCustomer,
+  bulkCreateCustomers,
   deleteCustomer,
 } = require('../controllers/customerController');
 const { protect, admin } = require('../middleware/authMiddleware');
@@ -15,6 +16,7 @@ router.get('/me', protect, getMyCustomer);
 // Admin only
 router.get('/', protect, admin, getCustomers);
 router.post('/', protect, admin, createCustomer);
+router.post('/bulk', protect, admin, bulkCreateCustomers);
 router.put('/:id', protect, admin, updateCustomer);
 router.delete('/:id', protect, admin, deleteCustomer);
 
