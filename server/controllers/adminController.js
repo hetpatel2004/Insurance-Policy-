@@ -55,7 +55,7 @@ const createUser = async (req, res) => {
       email,
       phone,
       password,
-      role: role === 'admin' ? 'admin' : 'user',
+      role: 'user',
       isVerified: typeof isVerified === 'boolean' ? isVerified : true,
     });
 
@@ -146,7 +146,7 @@ const bulkCreateUsers = async (req, res) => {
           email,
           phone: r.phone,
           password,
-          role: r.role === 'admin' ? 'admin' : 'user',
+          role: 'user',
           isVerified: true,
         });
         created++;
@@ -196,15 +196,12 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const { firstName, lastName, email, phone, aadharNumber, role, isVerified } = req.body;
+    const { firstName, lastName, email, phone, aadharNumber, isVerified } = req.body;
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.email = email || user.email;
     user.phone = phone || user.phone;
     user.aadharNumber = aadharNumber || user.aadharNumber;
-    if (role && ['user', 'admin'].includes(role)) {
-      user.role = role;
-    }
     if (typeof isVerified === 'boolean') {
       user.isVerified = isVerified;
     }

@@ -3,6 +3,7 @@
 
 :root,
 [data-theme='dark'] {
+  color-scheme: dark;
   --primary: #2563eb;
   --primary-dark: #1d4ed8;
   --primary-light: #60a5fa;
@@ -29,8 +30,8 @@
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-nav: #cbd5e1;
-  --text-muted-2: #64748b;
-  --text-muted-3: #475569;
+  --text-muted-2: #94a3b8;
+  --text-muted-3: #64748b;
   --hover-white: rgba(255, 255, 255, 0.1);
   --shimmer: rgba(255, 255, 255, 0.06);
   --toast-bg: rgba(15, 23, 42, 0.95);
@@ -39,9 +40,32 @@
   --table-hover: rgba(255, 255, 255, 0.04);
   --icon-bg: rgba(37, 99, 235, 0.15);
   --grid-line: rgba(255, 255, 255, 0.04);
+
+  /* Bootstrap variable overrides so tables/forms/modals follow the dark theme */
+  --bs-body-bg: #0f172a;
+  --bs-body-color: #e2e8f0;
+  --bs-body-color-rgb: 226, 232, 240;
+  --bs-emphasis-color: #f1f5f9;
+  --bs-emphasis-color-rgb: 241, 245, 249;
+  --bs-secondary-color: #94a3b8;
+  --bs-secondary-color-rgb: 148, 163, 184;
+  --bs-tertiary-color: #64748b;
+  --bs-tertiary-color-rgb: 100, 116, 139;
+  --bs-border-color: #334155;
+  --bs-border-color-translucent: rgba(51, 65, 85, 0.6);
+  --bs-modal-bg: #16233c;
+  --bs-modal-border-color: #334155;
+  --bs-modal-color: #e2e8f0;
+  --bs-table-bg: transparent;
+  --bs-table-color: #e2e8f0;
+  --bs-table-border-color: #334155;
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+  --bs-table-hover-color: #f1f5f9;
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
 }
 
 [data-theme='light'] {
+  color-scheme: light;
   --dark: #f8fafc;
   --dark-2: #ffffff;
   --dark-3: #e2e8f0;
@@ -131,6 +155,44 @@ body {
   border-color: rgba(96, 165, 250, 0.4) !important;
   transform: translateY(-10px);
   box-shadow: 0 20px 60px var(--shadow-color);
+}
+
+/* No hover/float effect on modal boxes (e.g. Add User / Add Company);
+   solid visible background instead of the nearly-transparent card tint */
+.modal-content.glass-card:hover,
+.modal-content.glass-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-strong);
+  transform: none;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='dark'] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme='dark'] .modal-content,
+[data-theme='dark'] .modal-header,
+[data-theme='dark'] .modal-footer,
+[data-theme='dark'] .modal-body {
+  border-color: var(--border-strong) !important;
+}
+
+/* Native select dropdowns: force dark popup items so option text is always readable */
+[data-theme='dark'] select,
+[data-theme='dark'] select.form-select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] select option {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+[data-theme='light'] select option {
+  background-color: #ffffff;
+  color: #0f172a;
 }
 
 .floating {
