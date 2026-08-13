@@ -5,7 +5,8 @@ import {
   Speedometer2, PeopleFill, FileEarmarkTextFill,
   PencilSquare, Trash, PersonFill, ShieldFillCheck,
   FileEarmarkText, ClockHistory, BuildingFill,
-  PersonBadgeFill, PlusCircleFill, XCircle, CloudUploadFill
+  PersonBadgeFill, PlusCircleFill, XCircle, CloudUploadFill,
+  CurrencyRupee, Check2, ArrowRepeat, EnvelopePlus, Search
 } from 'react-bootstrap-icons'
 import DashboardLayout from '../components/DashboardLayout'
 import { StatCard, PageHeader, StatusBadge, EmptyState } from '../components/dashboard/Widgets'
@@ -15,6 +16,7 @@ import {
   getCompanies, createCompany, updateCompany, deleteCompany,
   getCustomers, createCustomer, updateCustomer, deleteCustomer,
   bulkCreateUsers, bulkCreateCompanies, bulkCreateCustomers, bulkCreatePolicies,
+  getExpiringPolicies, getSuggestions, createSuggestion,
 } from '../api/auth'
 import { notifySuccess, notifyError } from '../utils/toast'
 import { POLICY_TYPES, getPolicyLabel } from '../utils/policyTypes'
@@ -24,6 +26,8 @@ const navItems = [
   { key: 'overview', label: 'Overview', icon: Speedometer2 },
   { key: 'users', label: 'Users', icon: PeopleFill },
   { key: 'policies', label: 'Policies', icon: FileEarmarkTextFill },
+  { key: 'pricing', label: 'Pricing', icon: CurrencyRupee },
+  { key: 'renewals', label: 'Renewals', icon: ArrowRepeat },
   { key: 'customers', label: 'Customers', icon: PersonBadgeFill },
   { key: 'companies', label: 'Companies', icon: BuildingFill },
 ]
@@ -89,22 +93,35 @@ const AdminDashboard = () => {
   const [companyPolicyTypes, setCompanyPolicyTypes] = useState([])
   const [newUserCompanyId, setNewUserCompanyId] = useState('')
   const [newUserPolicyType, setNewUserPolicyType] = useState('')
+  const [pricingDrafts, setPricingDrafts] = useState({})
+  const [expiringPolicies, setExpiringPolicies] = useState([])
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestModal, setShowSuggestModal] = useState(false)
+  const [suggestTarget, setSuggestTarget] = useState(null)
+  const [userQuery, setUserQuery] = useState('')
+  const [userSearch, setUserSearch] = useState('')
+  const [policyQuery, setPolicyQuery] = useState('')
+  const [policySearch, setPolicySearch] = useState('')
 
   const admin = getUser()
 
   const loadData = async () => {
     try {
       setLoading(true)
-      const [u, p, c, cu] = await Promise.all([
+      const [u, p, c, cu, exp, sug] = await Promise.all([
         getUsers(),
         getAllPolicies(),
         getCompanies(),
         getCustomers(),
+        getExpiringPolicies(90),
+        getSuggestions(),
       ])
       setUsers(u)
       setPolicies(p)
       setCompanies(c)
       setCustomers(cu)
+      setExpiringPolicies(exp)
+      setSuggestions(sug)
     } catch (err) {
       notifyError(err.message)
     } finally {
@@ -266,6 +283,70 @@ const AdminDashboard = () => {
     try {
       await deleteCompany(company._id)
       notifySuccess('Company deleted')
+      loadData()
+    } catch (err) { notifyError(err.message) }
+  }
+
+  // ---- Pricing ----
+  const updatePriceDraft = (id, field, value) => {
+    setPricingDrafts(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [field]: value } }))
+  }
+
+  const savePriceRow = async (p) => {
+    const d = pricingDrafts[p._id] || {}
+    const payload = {}
+    if (d.premium !== undefined && d.premium !== '') payload.premium = Number(d.premium)
+    if (d.coverage !== undefined && d.coverage !== '') payload.coverage = Number(d.coverage)
+    if (Object.keys(payload).length === 0) return
+    try {
+      await updatePolicy(p._id, payload)
+      setPricingDrafts(prev => { const next = { ...prev }; delete next[p._id]; return next })
+      notifySuccess('Price updated')
+      loadData()
+    } catch (err) { notifyError(err.message) }
+  }
+
+  // ---- Renewals / suggestions ----
+  const suggestRenewal = async (p) => {
+    if (!window.confirm(`Suggest renewal of "${p.planName}" to ${p.user?.firstName} ${p.user?.lastName}?`)) return
+    try {
+      await createSuggestion({
+        policyId: p._id,
+        kind: 'renewal',
+        policyType: p.policyType,
+        planName: p.planName,
+        premium: p.premium,
+        coverage: p.coverage,
+        company: p.company?._id,
+        message: 'Your policy is expiring soon. Renew it today to stay protected without any gap in coverage.',
+      })
+      notifySuccess('Renewal suggestion sent')
+      loadData()
+    } catch (err) { notifyError(err.message) }
+  }
+
+  const openSuggestNewPlan = (p) => {
+    const base = POLICY_TYPES.find(t => t.type === p.policyType)
+    setSuggestTarget({ ...p, suggestType: base?.type || p.policyType })
+    setShowSuggestModal(true)
+  }
+
+  const saveSuggestion = async (e) => {
+    e.preventDefault()
+    const target = suggestTarget
+    try {
+      await createSuggestion({
+        policyId: target._id,
+        kind: 'new-plan',
+        policyType: e.target.policyType.value,
+        planName: e.target.planName.value,
+        premium: e.target.premium.value,
+        coverage: e.target.coverage.value,
+        company: e.target.company.value || undefined,
+        message: e.target.message.value || 'We have a new plan that may suit you better. Check it out and let us know if you would like to switch.',
+      })
+      setShowSuggestModal(false)
+      notifySuccess('New plan suggestion sent')
       loadData()
     } catch (err) { notifyError(err.message) }
   }
@@ -442,14 +523,37 @@ const AdminDashboard = () => {
 
   const renderUsers = () => {
     const userList = users.filter(u => u.role === 'user')
+    const term = userSearch.trim().toLowerCase()
+    const filteredUsers = userList.filter(u =>
+      !term ||
+      `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
+      (u.email || '').toLowerCase().includes(term) ||
+      (u.aadharNumber || '').includes(term)
+    )
     return (
       <>
         <PageHeader
           title="User Management"
           subtitle="Manage all registered users, roles and verification status."
           badge={
-            <div className="d-flex align-items-center gap-2">
-              <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: 'var(--primary-light)' }}>{userList.length} Users</Badge>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="d-flex align-items-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-strong)', borderRadius: '999px', overflow: 'hidden' }}>
+                <input
+                  type="text"
+                  placeholder="Search by name, email or aadhar..."
+                  value={userQuery}
+                  onChange={e => setUserQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') setUserSearch(userQuery) }}
+                  style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '0.85rem', padding: '0.42rem 0.85rem', minWidth: '200px' }}
+                />
+                <Button size="sm" className="rounded-pill border-0" onClick={() => setUserSearch(userQuery)} style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', marginRight: '4px' }} title="Search">
+                  <Search size={14} />
+                </Button>
+              </div>
+              {term && (
+                <Button size="sm" variant="outline" className="rounded-pill" onClick={() => { setUserSearch(''); setUserQuery('') }} style={{ border: '1px solid var(--border-strong)', color: 'var(--text-muted-2)' }}>Clear</Button>
+              )}
+              <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: 'var(--primary-light)' }}>{term ? `${filteredUsers.length}/${userList.length} Users` : `${userList.length} Users`}</Badge>
             <Button className="rounded-pill gradient-bg border-0 px-3" onClick={openCreateUser}>
               <PlusCircleFill className="me-1" /> Add User
             </Button>
@@ -461,8 +565,8 @@ const AdminDashboard = () => {
       />
       <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
         <Card.Body style={{ padding: 0 }}>
-          {userList.length === 0 ? (
-            <EmptyState icon={PeopleFill} title="No users found" />
+          {filteredUsers.length === 0 ? (
+            <EmptyState icon={PeopleFill} title={term ? 'No users match your search' : 'No users found'} subtitle={term ? 'Try a different name, email or aadhar number.' : undefined} />
           ) : (
             <div className="table-responsive">
               <Table hover responsive style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.88rem' }}>
@@ -477,7 +581,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {userList.map(user => (
+                  {filteredUsers.map(user => (
                     <tr key={user._id} style={{ verticalAlign: 'middle' }}>
                       <td>
                         <div className="d-flex align-items-center gap-2">
@@ -547,14 +651,39 @@ const AdminDashboard = () => {
     )
   }
 
-  const renderPolicies = () => (
-    <>
-      <PageHeader
-        title="Policy Management"
-        subtitle="Review, approve or reject policy applications."
-        badge={
-          <div className="d-flex align-items-center gap-2">
-            <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>{policies.length} Policies</Badge>
+  const renderPolicies = () => {
+    const term = policySearch.trim().toLowerCase()
+    const filteredPolicies = policies.filter(p =>
+      !term ||
+      `${p.user?.firstName} ${p.user?.lastName}`.toLowerCase().includes(term) ||
+      (p.planName || '').toLowerCase().includes(term) ||
+      getPolicyLabel(p.policyType).toLowerCase().includes(term) ||
+      (p.company?.name || '').toLowerCase().includes(term)
+    )
+    return (
+      <>
+        <PageHeader
+          title="Policy Management"
+          subtitle="Review, approve or reject policy applications."
+          badge={
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="d-flex align-items-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-strong)', borderRadius: '999px', overflow: 'hidden' }}>
+                <input
+                  type="text"
+                  placeholder="Search by customer, plan, type or company..."
+                  value={policyQuery}
+                  onChange={e => setPolicyQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') setPolicySearch(policyQuery) }}
+                  style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '0.85rem', padding: '0.42rem 0.85rem', minWidth: '200px' }}
+                />
+                <Button size="sm" className="rounded-pill border-0" onClick={() => setPolicySearch(policyQuery)} style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', marginRight: '4px' }} title="Search">
+                  <Search size={14} />
+                </Button>
+              </div>
+              {term && (
+                <Button size="sm" variant="outline" className="rounded-pill" onClick={() => { setPolicySearch(''); setPolicyQuery('') }} style={{ border: '1px solid var(--border-strong)', color: 'var(--text-muted-2)' }}>Clear</Button>
+              )}
+              <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>{term ? `${filteredPolicies.length}/${policies.length} Policies` : `${policies.length} Policies`}</Badge>
             <Button variant="outline-primary" className="rounded-pill px-3" onClick={() => setBulkTarget('policies')} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
               <CloudUploadFill className="me-1" /> Bulk Upload
             </Button>
@@ -563,8 +692,8 @@ const AdminDashboard = () => {
       />
       <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
         <Card.Body style={{ padding: 0 }}>
-          {policies.length === 0 ? (
-            <EmptyState icon={FileEarmarkText} title="No policy applications" subtitle="New applications will show up here." />
+          {filteredPolicies.length === 0 ? (
+            <EmptyState icon={FileEarmarkText} title={term ? 'No policies match your search' : 'No policy applications'} subtitle={term ? 'Try a different customer, plan or company.' : 'New applications will show up here.'} />
           ) : (
             <div className="table-responsive">
               <Table hover responsive style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.88rem' }}>
@@ -580,7 +709,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {policies.map(p => (
+                  {filteredPolicies.map(p => (
                     <tr key={p._id} style={{ verticalAlign: 'middle' }}>
                       <td>
                         <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.user?.firstName} {p.user?.lastName}</div>
@@ -621,6 +750,199 @@ const AdminDashboard = () => {
       </Card>
     </>
   )
+  }
+
+  const renderPricing = () => (
+    <>
+      <PageHeader
+        title="Pricing Management"
+        subtitle="Adjust the premium and coverage of any policy plan. Edits apply immediately."
+        badge={
+          <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: 'var(--primary-light)' }}>{policies.length} Plans</Badge>
+        }
+      />
+      <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+        <Card.Body style={{ padding: 0 }}>
+          {policies.length === 0 ? (
+            <EmptyState icon={FileEarmarkText} title="No plans yet" subtitle="Add policies first, then adjust their prices here." />
+          ) : (
+            <div className="table-responsive">
+              <Table hover responsive style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.88rem' }}>
+                <thead>
+                  <tr style={{ color: 'var(--text-muted-2)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                    <th>Plan / Customer</th>
+                    <th className="d-none d-md-table-cell">Type</th>
+                    <th className="d-none d-md-table-cell">Company</th>
+                    <th style={{ minWidth: '140px' }}>Premium</th>
+                    <th style={{ minWidth: '140px' }}>Coverage</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {policies.map(p => {
+                    const d = pricingDrafts[p._id] || {}
+                    const prem = d.premium !== undefined ? d.premium : p.premium
+                    const cov = d.coverage !== undefined ? d.coverage : p.coverage
+                    const changed =
+                      (d.premium !== undefined && Number(d.premium) !== Number(p.premium)) ||
+                      (d.coverage !== undefined && Number(d.coverage) !== Number(p.coverage))
+                    return (
+                      <tr key={p._id} style={{ verticalAlign: 'middle' }}>
+                        <td>
+                          <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.planName || '-'}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{p.user?.firstName} {p.user?.lastName}</div>
+                        </td>
+                        <td className="d-none d-md-table-cell">{getPolicyLabel(p.policyType)}</td>
+                        <td className="d-none d-md-table-cell" style={{ fontSize: '0.85rem' }}>{p.company?.name || '-'}</td>
+                        <td>
+                          <Form.Control
+                            type="number"
+                            min={0}
+                            value={prem}
+                            onChange={e => updatePriceDraft(p._id, 'premium', e.target.value)}
+                            style={{
+                              background: 'var(--input-bg)',
+                              border: `1px solid ${d.premium !== undefined ? 'rgba(96,165,250,0.6)' : 'var(--border-strong)'}`,
+                              color: 'var(--text-primary)',
+                              fontWeight: 600,
+                              width: '140px',
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <Form.Control
+                            type="number"
+                            min={0}
+                            value={cov}
+                            onChange={e => updatePriceDraft(p._id, 'coverage', e.target.value)}
+                            style={{
+                              background: 'var(--input-bg)',
+                              border: `1px solid ${d.coverage !== undefined ? 'rgba(96,165,250,0.6)' : 'var(--border-strong)'}`,
+                              color: 'var(--text-primary)',
+                              fontWeight: 600,
+                              width: '140px',
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <div className="d-flex justify-content-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              className="rounded-pill"
+                              disabled={!changed}
+                              onClick={() => savePriceRow(p)}
+                              style={{ borderColor: 'rgba(96,165,250,0.3)', color: changed ? '#60a5fa' : 'var(--text-muted-3)' }}
+                            >
+                              <Check2 size={13} className="me-1" />Save
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+    </>
+  )
+
+  const renderRenewals = () => {
+    const suggestedIds = new Set(
+      suggestions.filter(s => s.status === 'pending' && s.policy?._id).map(s => String(s.policy._id))
+    )
+    const expired = expiringPolicies.filter(p => p.daysLeft < 0).length
+    const soon30 = expiringPolicies.filter(p => p.daysLeft >= 0 && p.daysLeft <= 30).length
+    const soon90 = expiringPolicies.filter(p => p.daysLeft > 30 && p.daysLeft <= 90).length
+
+    const daysBadge = (daysLeft) => {
+      if (daysLeft < 0) {
+        return { text: `Expired ${Math.abs(daysLeft)}d ago`, color: '#f87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)' }
+      }
+      if (daysLeft === 0) {
+        return { text: 'Expires today', color: '#fb923c', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)' }
+      }
+      if (daysLeft <= 30) {
+        return { text: `${daysLeft} days left`, color: '#fb923c', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.3)' }
+      }
+      return { text: `${daysLeft} days left`, color: '#facc15', bg: 'rgba(250,204,21,0.1)', border: 'rgba(250,204,21,0.3)' }
+    }
+
+    return (
+      <>
+        <PageHeader
+          title="Renewals & Expiring Policies"
+          subtitle="See policies that expire soon or have lapsed, and suggest renewal or a new plan to the customer."
+          badge={
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171' }}>{expired} Expired</Badge>
+              <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(249,115,22,0.12)', color: '#fb923c' }}>{soon30} Due in 30d</Badge>
+              <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(250,204,21,0.1)', color: '#facc15' }}>{soon90} Due in 90d</Badge>
+            </div>
+          }
+        />
+        <Card className="glass-card" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+          <Card.Body style={{ padding: 0 }}>
+            {expiringPolicies.length === 0 ? (
+              <EmptyState icon={ShieldFillCheck} title="No expiring policies" subtitle="All active policies are covered for the next 90 days." />
+            ) : (
+              <div className="table-responsive">
+                <Table hover responsive style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.88rem' }}>
+                  <thead>
+                    <tr style={{ color: 'var(--text-muted-2)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                      <th>Customer</th>
+                      <th>Plan</th>
+                      <th className="d-none d-lg-table-cell">Type</th>
+                      <th className="d-none d-md-table-cell">Company</th>
+                      <th className="d-none d-md-table-cell">Expires on</th>
+                      <th>Status</th>
+                      <th className="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expiringPolicies.map(p => {
+                      const badge = daysBadge(p.daysLeft)
+                      const suggested = suggestedIds.has(String(p._id))
+                      return (
+                        <tr key={p._id} style={{ verticalAlign: 'middle' }}>
+                          <td>
+                            <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.user?.firstName} {p.user?.lastName}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>{p.user?.phone || p.user?.email}</div>
+                          </td>
+                          <td style={{ fontSize: '0.85rem' }}>{p.planName}</td>
+                          <td className="d-none d-lg-table-cell">{getPolicyLabel(p.policyType)}</td>
+                          <td className="d-none d-md-table-cell" style={{ fontSize: '0.85rem' }}>{p.company?.name || '-'}</td>
+                          <td className="d-none d-md-table-cell">{p.endDate ? new Date(p.endDate).toLocaleDateString() : '-'}</td>
+                          <td>
+                            <span className="rounded-pill px-3 py-1" style={{ background: badge.bg, border: `1px solid ${badge.border}`, color: badge.color, fontSize: '0.75rem', fontWeight: 600 }}>
+                              {badge.text}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="d-flex justify-content-end gap-2 flex-wrap">
+                              <Button size="sm" variant="outline" className="rounded-pill" disabled={suggested} onClick={() => suggestRenewal(p)} style={{ border: '1px solid rgba(52,211,153,0.3)', color: suggested ? 'var(--text-muted-3)' : '#34d399', fontWeight: 600 }}>
+                                {suggested ? 'Suggested' : <><ArrowRepeat size={13} className="me-1" />Renew</>}
+                              </Button>
+                              <Button size="sm" variant="outline-primary" className="rounded-pill" disabled={suggested} onClick={() => openSuggestNewPlan(p)} style={{ borderColor: 'rgba(96,165,250,0.3)', color: suggested ? 'var(--text-muted-3)' : '#60a5fa' }}>
+                                <EnvelopePlus size={13} className="me-1" />New Plan
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      </>
+    )
+  }
 
   const renderCompanies = () => (
     <>
@@ -794,6 +1116,8 @@ const AdminDashboard = () => {
           {view === 'overview' && renderOverview()}
           {view === 'users' && renderUsers()}
           {view === 'policies' && renderPolicies()}
+          {view === 'pricing' && renderPricing()}
+          {view === 'renewals' && renderRenewals()}
           {view === 'companies' && renderCompanies()}
           {view === 'customers' && renderCustomers()}
         </>
@@ -970,6 +1294,75 @@ const AdminDashboard = () => {
           <Modal.Footer style={{ borderTop: '1px solid var(--border)' }}>
             <Button variant="outline-light" className="rounded-pill" onClick={() => setShowEditPolicy(false)} style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-strong)' }}>Cancel</Button>
             <Button type="submit" className="rounded-pill gradient-bg border-0">Save Changes</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Suggest new plan modal */}
+      <Modal show={showSuggestModal} onHide={() => setShowSuggestModal(false)} centered contentClassName="glass-card" style={{ color: 'var(--text-primary)' }}>
+        <Modal.Header closeButton style={{ borderBottom: '1px solid var(--border)' }}>
+          <Modal.Title style={{ fontSize: '1.1rem', fontWeight: 700 }}>Suggest a New Plan</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={saveSuggestion}>
+          <Modal.Body>
+            <div className="row g-3">
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Customer</Form.Label>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{suggestTarget?.user?.firstName} {suggestTarget?.user?.lastName}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>Current: {suggestTarget?.planName}</div>
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Plan Name *</Form.Label>
+                  <Form.Control name="planName" required placeholder="e.g. Secure Health Gold" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Insurance Type *</Form.Label>
+                  <Form.Select name="policyType" defaultValue={suggestTarget?.suggestType || 'health'} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}>
+                    {POLICY_TYPES.map(t => (
+                      <option key={t.type} value={t.type}>{t.label}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Company</Form.Label>
+                  <Form.Select name="company" defaultValue={suggestTarget?.company?._id || ''} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}>
+                    <option value="">No company</option>
+                    {companies.map(c => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </div>
+              <div className="col-6">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Premium (yearly)</Form.Label>
+                  <Form.Control type="number" name="premium" required defaultValue={POLICY_TYPES.find(t => t.type === suggestTarget?.suggestType)?.basePremium || ''} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', fontWeight: 600 }} />
+                </Form.Group>
+              </div>
+              <div className="col-6">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Coverage</Form.Label>
+                  <Form.Control type="number" name="coverage" required defaultValue={POLICY_TYPES.find(t => t.type === suggestTarget?.suggestType)?.coverage || ''} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', fontWeight: 600 }} />
+                </Form.Group>
+              </div>
+              <div className="col-12">
+                <Form.Group>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Message (shown to customer)</Form.Label>
+                  <Form.Control as="textarea" rows={2} name="message" placeholder="Why should they switch?" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', resize: 'vertical' }} />
+                </Form.Group>
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer style={{ borderTop: '1px solid var(--border)' }}>
+            <Button variant="outline-light" className="rounded-pill" onClick={() => setShowSuggestModal(false)} style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-strong)' }}>Cancel</Button>
+            <Button type="submit" className="rounded-pill gradient-bg border-0">Send Suggestion</Button>
           </Modal.Footer>
         </Form>
       </Modal>

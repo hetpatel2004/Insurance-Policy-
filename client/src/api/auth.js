@@ -2,6 +2,7 @@ const API_URL = '/api/auth';
 const POLICY_URL = '/api/policies';
 const COMPANY_URL = '/api/companies';
 const CUSTOMER_URL = '/api/customers';
+const RENEWAL_URL = '/api/renewals';
 
 const getToken = () => localStorage.getItem('token');
 const getUser = () => {
@@ -74,6 +75,7 @@ const request = makeRequester(API_URL);
 const requestPolicy = makeRequester(POLICY_URL);
 const requestCompany = makeRequester(COMPANY_URL);
 const requestCustomer = makeRequester(CUSTOMER_URL);
+const requestRenewal = makeRequester(RENEWAL_URL);
 
 // Auth
 export const register = (userData) => request('/register', {
@@ -167,6 +169,18 @@ export const deleteCustomer = (id) => requestCustomer(`/${id}`, {
 export const bulkCreateCustomers = (rows) => requestCustomer('/bulk', {
   method: 'POST',
   body: JSON.stringify({ rows }),
+});
+
+// Renewals / suggestions
+export const getExpiringPolicies = (days = 90) => requestRenewal(`/expiring?days=${days}`);
+export const getSuggestions = () => requestRenewal('/');
+export const createSuggestion = (suggestionData) => requestRenewal('/', {
+  method: 'POST',
+  body: JSON.stringify(suggestionData),
+});
+export const updateSuggestionStatus = (id, status) => requestRenewal(`/${id}`, {
+  method: 'PUT',
+  body: JSON.stringify({ status }),
 });
 
 export const logout = () => {

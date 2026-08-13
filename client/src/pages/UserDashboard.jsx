@@ -9,7 +9,7 @@ import {
 } from 'react-bootstrap-icons'
 import DashboardLayout from '../components/DashboardLayout'
 import { StatCard, PageHeader, StatusBadge, EmptyState } from '../components/dashboard/Widgets'
-import { getMyPolicies, applyPolicy, updateProfile, getUser, getMyCustomer, getCompanies } from '../api/auth'
+import { getMyPolicies, applyPolicy, updateProfile, getUser, getMyCustomer, getCompanies, getSuggestions, updateSuggestionStatus } from '../api/auth'
 import { POLICY_TYPES, getPolicyLabel } from '../utils/policyTypes'
 import { notifySuccess, notifyError } from '../utils/toast'
 
@@ -34,6 +34,7 @@ const UserDashboard = () => {
   const [applyPremium, setApplyPremium] = useState(policyOptions[0].basePremium)
   const [applyCoverage, setApplyCoverage] = useState(policyOptions[0].coverage)
   const [applyCompany, setApplyCompany] = useState('')
+  const [suggestions, setSuggestions] = useState([])
 
   const user = getUser()
   const isExistingCustomer = !!customer
@@ -42,14 +43,16 @@ const UserDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [data, cust, comps] = await Promise.all([
+      const [data, cust, comps, sugs] = await Promise.all([
         getMyPolicies(),
         getMyCustomer(),
         getCompanies(),
+        getSuggestions(),
       ])
       setPolicies(data)
       setCustomer(cust)
       setCompanies(comps)
+      setSuggestions(sugs)
     } catch (err) {
       notifyError(err.message)
     } finally {
@@ -60,6 +63,14 @@ const UserDashboard = () => {
   useEffect(() => {
     loadData()
   }, [])
+
+  const dismissSuggestion = async (s) => {
+    try {
+      await updateSuggestionStatus(s._id, 'dismissed')
+      notifySuccess('Suggestion dismissed')
+      loadData()
+    } catch (err) { notifyError(err.message) }
+  }
 
   const selectPolicyType = (type) => {
     const opt = policyOptions.find(o => o.type === type)
@@ -148,8 +159,40 @@ const UserDashboard = () => {
         <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={FileEarmarkTextFill} label="Total Policies" value={ownedPolicies.length + policies.length} color="#60a5fa" delay={0} /></div>
         <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={ShieldCheck} label="Active Policies" value={activeCount} color="#34d399" delay={0.1} /></div>
         <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={ClockHistory} label="Under Review" value={pendingCount} color="#fbbf24" delay={0.2} /></div>
-        <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={Wallet2} label="Total Coverage" value={`ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${(totalCoverage / 100000).toFixed(1)}L`} color="#a78bfa" delay={0.3} /></div>
+        <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={Wallet2} label="Total Coverage" value={`₹${(totalCoverage / 100000).toFixed(1)}L`} color="#a78bfa" delay={0.3} /></div>
       </div>
+
+      {suggestions.filter(s => s.status === 'pending').length > 0 && (
+        <div className="mb-4">
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <LightbulbFill color="#fbbf24" size={18} />
+            <h5 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: 700 }}>Suggestions from your agent</h5>
+          </div>
+          {suggestions.filter(s => s.status === 'pending').map(s => (
+            <div key={s._id} className="p-3 mb-2 rounded-3" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)' }}>
+              <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                    {s.kind === 'renewal' ? `Renew your plan: ${s.planName}` : `New plan suggestion: ${s.planName}`}
+                  </div>
+                  <div style={{ color: 'var(--text-muted-2)', fontSize: '0.82rem', marginTop: '2px' }}>
+                    {getPolicyLabel(s.policyType)} · ₹{s.premium}/yr · ₹{s.coverage} cover
+                  </div>
+                  {s.message && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '6px' }}>{s.message}</div>}
+                </div>
+                <div className="d-flex gap-2 flex-shrink-0">
+                  <Button size="sm" variant="outline-primary" className="rounded-pill" onClick={() => notifySuccess('Our team will contact you shortly to complete the renewal.')} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa', fontWeight: 600 }}>
+                    Contact Agent
+                  </Button>
+                  <Button size="sm" variant="outline" className="rounded-pill" onClick={() => dismissSuggestion(s)} style={{ border: '1px solid var(--border-strong)', color: 'var(--text-muted-2)' }}>
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Row className="g-3">
         <Col lg={7}>

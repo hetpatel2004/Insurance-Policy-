@@ -7,6 +7,7 @@ const policyRoutes = require('./routes/policyRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const statsRoutes = require('./routes/statsRoutes');
+const renewalRoutes = require('./routes/renewalRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,6 +22,7 @@ app.use('/api/policies', policyRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/renewals', renewalRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
