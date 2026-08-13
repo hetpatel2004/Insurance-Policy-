@@ -124,11 +124,11 @@ const UserDashboard = () => {
   const renderOverview = () => (
     <>
       <PageHeader
-        title={`Hello, ${user?.firstName} ðŸ‘‹`}
+        title={`Hello, ${user?.firstName} ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹`}
         subtitle={isExistingCustomer ? 'Welcome back! Your recorded policies are ready for you below.' : 'Welcome to your SecureLife insurance dashboard.'}
         badge={
           <span className="rounded-pill px-3 py-1" style={{ background: isExistingCustomer ? 'rgba(52,211,153,0.1)' : 'rgba(96,165,250,0.1)', color: isExistingCustomer ? '#34d399' : 'var(--primary-light)', fontSize: '0.8rem', fontWeight: 600 }}>
-            {isExistingCustomer ? 'âœ“ Recorded Client' : 'New Customer'}
+            {isExistingCustomer ? 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Recorded Client' : 'New Customer'}
           </span>
         }
       />
@@ -148,7 +148,7 @@ const UserDashboard = () => {
         <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={FileEarmarkTextFill} label="Total Policies" value={ownedPolicies.length + policies.length} color="#60a5fa" delay={0} /></div>
         <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={ShieldCheck} label="Active Policies" value={activeCount} color="#34d399" delay={0.1} /></div>
         <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={ClockHistory} label="Under Review" value={pendingCount} color="#fbbf24" delay={0.2} /></div>
-        <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={Wallet2} label="Total Coverage" value={`â‚¹${(totalCoverage / 100000).toFixed(1)}L`} color="#a78bfa" delay={0.3} /></div>
+        <div className="col-12 col-sm-6 col-lg-3"><StatCard icon={Wallet2} label="Total Coverage" value={`ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹${(totalCoverage / 100000).toFixed(1)}L`} color="#a78bfa" delay={0.3} /></div>
       </div>
 
       <Row className="g-3">
@@ -171,7 +171,7 @@ const UserDashboard = () => {
                         )}
                       </div>
                       <div style={{ color: 'var(--text-muted-2)', fontSize: '0.78rem' }}>
-                        â‚¹{p.premium || 0}/yr Â· â‚¹{p.coverage || 0} cover{p.company?.name ? ` Â· ${p.company.name}` : ''}
+                        ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.premium || 0}/yr Ãƒâ€šÃ‚Â· ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.coverage || 0} cover{p.company?.name ? ` Ãƒâ€šÃ‚Â· ${p.company.name}` : ''}
                       </div>
                     </div>
                     <StatusBadge status={p.status} />
@@ -247,11 +247,11 @@ const UserDashboard = () => {
                       <div className="d-flex gap-4 py-3" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
                         <div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>Premium</div>
-                          <div style={{ color: 'var(--text-primary)', fontWeight: 700 }}>â‚¹{p.premium || 0}/yr</div>
+                          <div style={{ color: 'var(--text-primary)', fontWeight: 700 }}>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.premium || 0}/yr</div>
                         </div>
                         <div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>Coverage</div>
-                          <div style={{ color: '#34d399', fontWeight: 700 }}>â‚¹{p.coverage || 0}</div>
+                          <div style={{ color: '#34d399', fontWeight: 700 }}>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.coverage || 0}</div>
                         </div>
                       </div>
                       <div className="d-flex align-items-center gap-2 mt-3" style={{ color: 'var(--text-muted-2)', fontSize: '0.8rem' }}>
@@ -261,7 +261,7 @@ const UserDashboard = () => {
                       <div className="d-flex align-items-center gap-2 mt-1" style={{ color: 'var(--text-muted-2)', fontSize: '0.8rem' }}>
                         <Calendar3 size={14} />
                         {p.startDate ? new Date(p.startDate).toLocaleDateString() : 'Start date not set'}
-                        {p.endDate && <span>â†’ {new Date(p.endDate).toLocaleDateString()}</span>}
+                        {p.endDate && <span>ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {new Date(p.endDate).toLocaleDateString()}</span>}
                       </div>
                     </Card.Body>
                   </Card>
@@ -292,11 +292,11 @@ const UserDashboard = () => {
                       <div className="d-flex gap-4 py-3" style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
                         <div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>Premium</div>
-                          <div style={{ color: 'var(--text-primary)', fontWeight: 700 }}>â‚¹{p.premium}/yr</div>
+                          <div style={{ color: 'var(--text-primary)', fontWeight: 700 }}>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.premium}/yr</div>
                         </div>
                         <div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>Coverage</div>
-                          <div style={{ color: '#34d399', fontWeight: 700 }}>â‚¹{p.coverage}</div>
+                          <div style={{ color: '#34d399', fontWeight: 700 }}>ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.coverage}</div>
                         </div>
                       </div>
                       <div className="d-flex align-items-center gap-2 mt-3" style={{ color: 'var(--text-muted-2)', fontSize: '0.8rem' }}>
@@ -306,7 +306,7 @@ const UserDashboard = () => {
                       <div className="d-flex align-items-center gap-2 mt-1" style={{ color: 'var(--text-muted-2)', fontSize: '0.8rem' }}>
                         <Calendar3 size={14} />
                         {p.startDate ? new Date(p.startDate).toLocaleDateString() : 'Not started yet'}
-                        {p.endDate && <span>â†’ {new Date(p.endDate).toLocaleDateString()}</span>}
+                        {p.endDate && <span>ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {new Date(p.endDate).toLocaleDateString()}</span>}
                       </div>
                     </Card.Body>
                   </Card>
@@ -331,7 +331,7 @@ const UserDashboard = () => {
                     <Card.Body className="d-flex flex-column">
                       <div style={{ fontSize: '0.75rem', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>{opt.label}</div>
                       <div className="mt-auto pt-2">
-                        <div style={{ color: 'var(--text-muted-2)', fontSize: '0.8rem' }}>From â‚¹{opt.basePremium}/yr</div>
+                        <div style={{ color: 'var(--text-muted-2)', fontSize: '0.8rem' }}>From ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{opt.basePremium}/yr</div>
                         <Button
                           size="sm"
                           className="rounded-pill mt-2 w-100 gradient-bg border-0"
@@ -374,7 +374,7 @@ const UserDashboard = () => {
                   <Form.Select value={applyType} onChange={e => selectPolicyType(e.target.value)} required style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}>
                     {policyOptions.map(opt => (
                       <option key={opt.type} value={opt.type} style={{ color: 'var(--text-primary)' }}>
-                        {opt.label} - â‚¹{opt.basePremium}/yr
+                        {opt.label} - ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{opt.basePremium}/yr
                       </option>
                     ))}
                   </Form.Select>
@@ -383,7 +383,7 @@ const UserDashboard = () => {
                 <Form.Group className="mb-3">
                   <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>Insurance Company</Form.Label>
                   <Form.Select value={applyCompany} onChange={e => setApplyCompany(e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}>
-                    <option value="">Select company (optional)</option>
+                    <option value="" style={{ color: 'var(--text-primary)' }}>Select company (optional)</option>
                     {companies.map(c => (
                       <option key={c._id} value={c._id} style={{ color: 'var(--text-primary)' }}>{c.name}</option>
                     ))}
@@ -403,13 +403,13 @@ const UserDashboard = () => {
                 <div className="row g-3 mb-4">
                   <div className="col-6">
                     <Form.Group>
-                      <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>Premium (â‚¹/yr)</Form.Label>
+                      <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>Premium (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹/yr)</Form.Label>
                       <Form.Control type="number" name="premium" required value={applyPremium} onChange={e => setApplyPremium(e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }} />
                     </Form.Group>
                   </div>
                   <div className="col-6">
                     <Form.Group>
-                      <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>Coverage (â‚¹)</Form.Label>
+                      <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>Coverage (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹)</Form.Label>
                       <Form.Control type="number" name="coverage" required value={applyCoverage} onChange={e => setApplyCoverage(e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }} />
                     </Form.Group>
                   </div>

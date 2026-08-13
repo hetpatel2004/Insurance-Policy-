@@ -347,7 +347,7 @@ const AdminDashboard = () => {
   const renderOverview = () => (
     <>
       <PageHeader
-        title={`Welcome back, ${admin?.firstName} ðŸ‘‹`}
+        title={`Welcome back, ${admin?.firstName} ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹`}
         subtitle="Here's what's happening in your insurance portfolio today."
         badge={
           <span className="rounded-pill px-3 py-1" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -584,12 +584,12 @@ const AdminDashboard = () => {
                     <tr key={p._id} style={{ verticalAlign: 'middle' }}>
                       <td>
                         <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.user?.firstName} {p.user?.lastName}</div>
-                        <div className="d-md-none" style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{getPolicyLabel(p.policyType)} Â· â‚¹{p.premium}</div>
+                        <div className="d-md-none" style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{getPolicyLabel(p.policyType)} Ãƒâ€šÃ‚Â· ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.premium}</div>
                       </td>
                       <td className="d-none d-md-table-cell">{getPolicyLabel(p.policyType)}</td>
                       <td style={{ fontSize: '0.85rem' }}>{p.planName}</td>
-                      <td className="d-none d-md-table-cell" style={{ fontSize: '0.85rem' }}>{p.company?.name || 'â€”'}</td>
-                      <td className="d-none d-md-table-cell">â‚¹{p.premium}</td>
+                      <td className="d-none d-md-table-cell" style={{ fontSize: '0.85rem' }}>{p.company?.name || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</td>
+                      <td className="d-none d-md-table-cell">ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.premium}</td>
                       <td><StatusBadge status={p.status} /></td>
                       <td>
                         <div className="d-flex justify-content-end gap-2 flex-wrap">
@@ -664,17 +664,17 @@ const AdminDashboard = () => {
                           </div>
                           <div>
                             <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{c.name}</div>
-                            <div className="d-md-none" style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>{c.phone || 'â€”'}</div>
+                            <div className="d-md-none" style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>{c.phone || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</div>
                           </div>
                         </div>
                       </td>
                       <td className="d-none d-md-table-cell">
-                        <div style={{ fontSize: '0.85rem' }}>{c.email || 'â€”'}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{c.phone || 'â€”'}</div>
+                        <div style={{ fontSize: '0.85rem' }}>{c.email || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{c.phone || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</div>
                       </td>
                       <td className="d-none d-lg-table-cell">
                         {(c.policyTypes || []).length === 0 ? (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-2)' }}>â€”</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-2)' }}>ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>
                         ) : (
                           <div className="d-flex flex-wrap gap-1" style={{ maxWidth: '280px' }}>
                             {(c.policyTypes || []).slice(0, 3).map(t => (
@@ -690,7 +690,7 @@ const AdminDashboard = () => {
                           </div>
                         )}
                       </td>
-                      <td className="d-none d-xl-table-cell" style={{ fontSize: '0.85rem', maxWidth: '220px' }}>{c.description || 'â€”'}</td>
+                      <td className="d-none d-xl-table-cell" style={{ fontSize: '0.85rem', maxWidth: '220px' }}>{c.description || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</td>
                       <td>
                         <div className="d-flex justify-content-end gap-2">
                           <Button size="sm" variant="outline-primary" className="rounded-pill" onClick={() => openCompanyModal(c)} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
@@ -749,7 +749,7 @@ const AdminDashboard = () => {
                     <tr key={c._id} style={{ verticalAlign: 'middle' }}>
                       <td>
                         <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{c.name}</div>
-                        <div className="d-md-none" style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>{c.phone || 'â€”'}</div>
+                        <div className="d-md-none" style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>{c.phone || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</div>
                       </td>
                       <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{c.aadharNumber}</td>
                       <td className="d-none d-md-table-cell">
@@ -757,7 +757,7 @@ const AdminDashboard = () => {
                           <span className="rounded-pill px-2 py-1" style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)', color: 'var(--primary-light)', fontSize: '0.75rem', fontWeight: 600 }}>
                             {c.company.name}
                           </span>
-                        ) : <span style={{ fontSize: '0.8rem' }}>â€”</span>}
+                        ) : <span style={{ fontSize: '0.8rem' }}>ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>}
                       </td>
                       <td className="d-none d-sm-table-cell">
                         <span className="rounded-pill px-2 py-1" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', color: '#a78bfa', fontSize: '0.75rem', fontWeight: 600 }}>
@@ -895,7 +895,7 @@ const AdminDashboard = () => {
                   onChange={e => { setNewUserCompanyId(e.target.value); setNewUserPolicyType('') }}
                   style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}
                 >
-                  <option value="">Select company</option>
+                  <option value="" style={{ color: 'var(--text-primary)' }}>Select company</option>
                   {companies.map(c => (
                     <option key={c._id} value={c._id} style={{ color: 'var(--text-primary)' }}>{c.name}</option>
                   ))}
@@ -924,7 +924,7 @@ const AdminDashboard = () => {
                   {newUserCompanyId && (() => {
                     const comp = companies.find(c => c._id === newUserCompanyId)
                     if ((comp?.policyTypes || []).length === 0) {
-                      return <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)', marginTop: '4px' }}>This company has no insurance types set â€” showing all types. Edit the company to restrict its offerings.</div>
+                      return <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)', marginTop: '4px' }}>This company has no insurance types set ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â showing all types. Edit the company to restrict its offerings.</div>
                     }
                     return null
                   })()}
@@ -955,13 +955,13 @@ const AdminDashboard = () => {
               </div>
               <div className="col-6">
                 <Form.Group>
-                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Premium (â‚¹)</Form.Label>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Premium (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹)</Form.Label>
                   <Form.Control type="number" defaultValue={editPolicy?.premium} name="premium" required style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
                 </Form.Group>
               </div>
               <div className="col-6">
                 <Form.Group>
-                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Coverage (â‚¹)</Form.Label>
+                  <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Coverage (ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹)</Form.Label>
                   <Form.Control type="number" defaultValue={editPolicy?.coverage} name="coverage" required style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
                 </Form.Group>
               </div>
@@ -1087,7 +1087,7 @@ const AdminDashboard = () => {
                 <Form.Group>
                   <Form.Label style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Assigned Company</Form.Label>
                   <Form.Select name="company" defaultValue={editCustomer?.company?._id || ''} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px' }}>
-                    <option value="">Select company (tie-up)</option>
+                    <option value="" style={{ color: 'var(--text-primary)' }}>Select company (tie-up)</option>
                     {companies.map(c => (
                       <option key={c._id} value={c._id} style={{ color: 'var(--text-primary)' }}>{c.name}</option>
                     ))}
@@ -1124,7 +1124,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="col-6">
                       <Form.Select size="sm" value={row.company} onChange={e => setPolicyRow(idx, 'company', e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }}>
-                        <option value="">Company</option>
+                        <option value="" style={{ color: 'var(--text-primary)' }}>Company</option>
                         {companies.map(c => (
                           <option key={c._id} value={c._id} style={{ color: 'var(--text-primary)' }}>{c.name}</option>
                         ))}
@@ -1134,10 +1134,10 @@ const AdminDashboard = () => {
                       <Form.Control size="sm" placeholder="Plan name (e.g. Family Health Gold)" value={row.planName} onChange={e => setPolicyRow(idx, 'planName', e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
                     </div>
                     <div className="col-4">
-                      <Form.Control size="sm" type="number" placeholder="Premium â‚¹" value={row.premium} onChange={e => setPolicyRow(idx, 'premium', e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                      <Form.Control size="sm" type="number" placeholder="Premium ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹" value={row.premium} onChange={e => setPolicyRow(idx, 'premium', e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
                     </div>
                     <div className="col-4">
-                      <Form.Control size="sm" type="number" placeholder="Coverage â‚¹" value={row.coverage} onChange={e => setPolicyRow(idx, 'coverage', e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
+                      <Form.Control size="sm" type="number" placeholder="Coverage ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹" value={row.coverage} onChange={e => setPolicyRow(idx, 'coverage', e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }} />
                     </div>
                     <div className="col-4">
                       <Form.Select size="sm" value={row.status} onChange={e => setPolicyRow(idx, 'status', e.target.value)} style={{ background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)' }}>

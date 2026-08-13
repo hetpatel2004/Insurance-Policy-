@@ -178,16 +178,26 @@ body {
   border-color: var(--border-strong) !important;
 }
 
-/* Native select dropdowns: force dark popup items so option text is always readable */
+/* Native select dropdowns: solid backgrounds + explicit option colors + color-scheme,
+   so option text is readable in every browser/theme. */
 [data-theme='dark'] select,
 [data-theme='dark'] select.form-select {
-  background-color: var(--input-bg);
-  color: var(--text-primary);
+  color-scheme: dark;
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
 }
 
 [data-theme='dark'] select option {
-  background-color: #1e293b;
-  color: #f1f5f9;
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme='light'] select,
+[data-theme='light'] select.form-select {
+  color-scheme: light;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 [data-theme='light'] select option {
