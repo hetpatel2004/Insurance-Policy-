@@ -224,10 +224,15 @@ const deleteUser = async (req, res) => {
     if (user._id.toString() === req.user._id.toString()) {
       return res.status(400).json({ message: 'You cannot delete your own account' });
     }
+    // Prevent deletion of the last administrator
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    if (user.role === 'admin' && adminCount <= 1) {
+      return res.status(400).json({ message: 'Cannot delete the last administrator' });
+    }
     await user.deleteOne();
     res.json({ message: 'User removed' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

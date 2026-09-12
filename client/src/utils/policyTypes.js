@@ -4,8 +4,8 @@ export const POLICY_TYPES = [
     label: 'Health Insurance (Mediclaim)',
     desc: 'Cashless hospitalization and mediclaim cover across a wide network of hospitals.',
     features: ['Cashless Treatment', 'Room & ICU Cover', 'Daycare Procedures', 'Annual Checkups'],
-    basePremium: 25000,
-    coverage: 1000000,
+    basePremium: 5000,
+    coverage: 500000,
     color: '#ef4444',
   },
   {
@@ -13,8 +13,8 @@ export const POLICY_TYPES = [
     label: 'Personal Accident',
     desc: 'Financial protection for accidental death, permanent disablement and accident-related medical costs.',
     features: ['Accidental Death Cover', 'Permanent Disablement', 'Medical Reimbursement', 'Family Cover Option'],
-    basePremium: 3500,
-    coverage: 500000,
+    basePremium: 3000,
+    coverage: 200000,
     color: '#f97316',
   },
   {
@@ -23,25 +23,25 @@ export const POLICY_TYPES = [
     desc: 'Protection for your bike against accidents, theft and third-party liabilities.',
     features: ['Third-Party Cover', 'Own Damage', 'Theft Cover', 'Roadside Assistance'],
     basePremium: 2500,
-    coverage: 300000,
+    coverage: 100000,
     color: '#06b6d4',
   },
   {
     type: 'auto',
     label: 'Private Car Insurance',
-    desc: 'Comprehensive cover for your car — own damage, third-party and theft protection.',
+    desc: 'Comprehensive cover for your car - own damage, third-party and theft protection.',
     features: ['Own Damage', 'Third-Party Cover', 'Zero Depreciation', 'Personal Accident'],
-    basePremium: 12000,
+    basePremium: 7000,
     coverage: 500000,
     color: '#3b82f6',
   },
   {
     type: 'travel',
     label: 'Travel Insurance',
-    desc: 'Stay covered on domestic and international trips — medical, cancellations and lost baggage.',
+    desc: 'Stay covered on domestic and international trips - medical, cancellations and lost baggage.',
     features: ['Medical Emergencies', 'Trip Cancellation', 'Lost Baggage', 'Flight Delay'],
-    basePremium: 5000,
-    coverage: 300000,
+    basePremium: 2000,
+    coverage: 100000,
     color: '#8b5cf6',
   },
   {
@@ -49,8 +49,8 @@ export const POLICY_TYPES = [
     label: 'Fire Insurance',
     desc: 'Coverage against fire, lightning, explosion and related perils for buildings and stock.',
     features: ['Fire & Allied Perils', 'Building & Contents', 'Business Interruption', 'Stock Protection'],
-    basePremium: 8000,
-    coverage: 1000000,
+    basePremium: 4000,
+    coverage: 300000,
     color: '#f59e0b',
   },
   {
@@ -58,17 +58,17 @@ export const POLICY_TYPES = [
     label: 'Workman Compensation Insurance',
     desc: 'Employer liability cover for injury or death of employees while on the job.',
     features: ['Employer Liability', 'Injury & Death Cover', 'Occupational Diseases', 'Statutory Compliance'],
-    basePremium: 10000,
-    coverage: 1500000,
+    basePremium: 6000,
+    coverage: 1000000,
     color: '#10b981',
   },
   {
     type: 'household',
-    label: 'House Hold Insurance',
-    desc: 'Protection for household belongings — valuables, electronics and contents at home.',
+    label: 'Household Insurance',
+    desc: 'Protection for household belongings - valuables, electronics and contents at home.',
     features: ['Contents Cover', 'Valuables Protection', 'Theft & Burglary', 'Natural Disasters'],
-    basePremium: 7000,
-    coverage: 750000,
+    basePremium: 3500,
+    coverage: 250000,
     color: '#14b8a6',
   },
   {
@@ -76,8 +76,8 @@ export const POLICY_TYPES = [
     label: 'Shopkeeper Insurance',
     desc: 'Cover your shop premises, stock and equipment against fire, theft and other risks.',
     features: ['Stock & Fixtures', 'Fire & Allied Perils', 'Burglary & Theft', 'Public Liability'],
-    basePremium: 6000,
-    coverage: 600000,
+    basePremium: 5000,
+    coverage: 500000,
     color: '#ec4899',
   },
   {
@@ -85,8 +85,8 @@ export const POLICY_TYPES = [
     label: 'Burglary Insurance',
     desc: 'Compensation for loss of property due to theft, burglary and housebreaking.',
     features: ['Theft Cover', 'Housebreaking', 'Cash & Valuables', 'Alarm & Security Cover'],
-    basePremium: 5000,
-    coverage: 500000,
+    basePremium: 4500,
+    coverage: 200000,
     color: '#6366f1',
   },
   {
@@ -94,8 +94,8 @@ export const POLICY_TYPES = [
     label: 'Life Insurance',
     desc: 'Secure your family\'s future with our flexible term and investment-linked life plans.',
     features: ['Term Cover', 'Investment Options', 'Maturity Benefits', 'Tax Savings'],
-    basePremium: 30000,
-    coverage: 2000000,
+    basePremium: 8000,
+    coverage: 1000000,
     color: '#8b5cf6',
   },
   {
@@ -103,8 +103,8 @@ export const POLICY_TYPES = [
     label: 'Home Insurance',
     desc: 'Protect your home and belongings against natural disasters, theft, and accidents.',
     features: ['Structure Cover', 'Content Cover', 'Natural Disasters', 'Theft Protection'],
-    basePremium: 15000,
-    coverage: 800000,
+    basePremium: 6500,
+    coverage: 750000,
     color: '#f59e0b',
   },
   {
@@ -112,15 +112,15 @@ export const POLICY_TYPES = [
     label: 'Retirement Plans',
     desc: 'Plan your golden years with our reliable pension and annuity plans for financial independence.',
     features: ['Regular Income', 'Tax Benefits', 'Lump Sum Option', 'Life Cover'],
-    basePremium: 40000,
-    coverage: 3000000,
+    basePremium: 7000,
+    coverage: 500000,
     color: '#10b981',
   },
-]
+];
 
 export const getPolicyType = (type) => POLICY_TYPES.find(p => p.type === type)
 
 export const getPolicyLabel = (type) => {
-  const found = getPolicyType(type)
-  return found ? found.label : type
-}
+  const found = getPolicyType(type);
+  return found ? found.label : type;
+};

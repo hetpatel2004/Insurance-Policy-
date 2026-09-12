@@ -56,7 +56,13 @@ const policySchema = new mongoose.Schema(
       type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true, indexes: [
+    { user: 1 },
+    { policyType: 1 },
+    { status: 1 },
+    { endDate: 1 },
+    { company: 1 },
+  ] }
 );
 
 module.exports = mongoose.model('Policy', policySchema);

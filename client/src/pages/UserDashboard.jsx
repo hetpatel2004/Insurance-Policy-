@@ -31,8 +31,8 @@ const UserDashboard = () => {
   const [applying, setApplying] = useState(false)
   const [saving, setSaving] = useState(false)
   const [applyType, setApplyType] = useState(policyOptions[0].type)
-  const [applyPremium, setApplyPremium] = useState(policyOptions[0].basePremium)
-  const [applyCoverage, setApplyCoverage] = useState(policyOptions[0].coverage)
+  const [applyPremium, setApplyPremium] = useState('')
+  const [applyCoverage, setApplyCoverage] = useState('')
   const [applyCompany, setApplyCompany] = useState('')
   const [suggestions, setSuggestions] = useState([])
 
@@ -73,13 +73,8 @@ const UserDashboard = () => {
   }
 
   const selectPolicyType = (type) => {
-    const opt = policyOptions.find(o => o.type === type)
     setApplyType(type)
-    if (opt) {
-      setApplyPremium(opt.basePremium)
-      setApplyCoverage(opt.coverage)
-    }
-  }
+ }
 
   const handleApply = async (e) => {
     e.preventDefault()
@@ -89,8 +84,8 @@ const UserDashboard = () => {
       await applyPolicy({
         policyType: applyType,
         planName: e.target.planName.value || plan.label,
-        premium: Number(applyPremium),
-        coverage: Number(applyCoverage),
+        premium: Number(e.target.premium.value) || 0,
+        coverage: Number(e.target.coverage.value) || 0,
         company: applyCompany || undefined,
       })
       notifySuccess('Policy application submitted! Our team will review it soon.')
@@ -135,11 +130,11 @@ const UserDashboard = () => {
   const renderOverview = () => (
     <>
       <PageHeader
-        title={`Hello, ${user?.firstName} ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹`}
+        title={`Hello, ${user?.firstName} ₹`}
         subtitle={isExistingCustomer ? 'Welcome back! Your recorded policies are ready for you below.' : 'Welcome to your SecureLife insurance dashboard.'}
         badge={
           <span className="rounded-pill px-3 py-1" style={{ background: isExistingCustomer ? 'rgba(52,211,153,0.1)' : 'rgba(96,165,250,0.1)', color: isExistingCustomer ? '#34d399' : 'var(--primary-light)', fontSize: '0.8rem', fontWeight: 600 }}>
-            {isExistingCustomer ? 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Recorded Client' : 'New Customer'}
+            {isExistingCustomer ? 'Recorded Client' : 'New Customer'}
           </span>
         }
       />

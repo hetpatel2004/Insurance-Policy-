@@ -136,7 +136,7 @@ const Login = () => {
                         label="Remember me"
                         style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}
                       />
-                      <a href="#" style={{ color: '#60a5fa', fontSize: '0.85rem', textDecoration: 'none' }}>Forgot Password?</a>
+                      <a href="/contact" style={{ color: '#60a5fa', fontSize: '0.85rem', textDecoration: 'none' }}>Forgot Password?</a>
                     </div>
 
                     <Button

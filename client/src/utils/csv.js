@@ -1,4 +1,9 @@
 export const parseCSVRows = (text, columns) => {
+  // Remove UTF-8 BOM if present
+  if (text.startsWith('\uFEFF')) {
+    text = text.substring(1);
+  }
+
   const rows = []
   let row = []
   let field = ''

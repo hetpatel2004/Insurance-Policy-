@@ -20,11 +20,32 @@ const Contact = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     setSending(true)
-    setTimeout(() => {
-      setSending(false)
-      notifySuccess('Your message has been sent! Our team will get back to you soon.')
-      e.target.reset()
-    }, 800)
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: e.target.name.value,
+        email: e.target.email.value,
+        phone: e.target.phone.value,
+        subject: e.target.subject.value,
+        message: e.target.message.value,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to send message')
+        return res.json()
+      })
+      .then(() => {
+        setSending(false)
+        notifySuccess('Your message has been sent! Our team will get back to you soon.')
+        e.target.reset()
+      })
+      .catch((err) => {
+        setSending(false)
+        notifyError(err.message)
+      })
   }
 
   return (

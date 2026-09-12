@@ -1,55 +1,16 @@
 const mongoose = require('mongoose');
 
-const customerPolicySchema = new mongoose.Schema(
+const customerPolicyRefSchema = new mongoose.Schema(
   {
-    policyType: {
-      type: String,
-      required: [true, 'Policy type is required'],
-      enum: [
-        'health',
-        'life',
-        'home',
-        'auto',
-        'travel',
-        'retirement',
-        'personal-accident',
-        'two-wheeler',
-        'fire',
-        'workman-compensation',
-        'household',
-        'shopkeeper',
-        'burglary',
-      ],
-    },
-    planName: {
-      type: String,
-      required: [true, 'Plan name is required'],
-      trim: true,
-    },
-    company: {
+    policy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Company',
-    },
-    premium: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    coverage: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    startDate: {
-      type: Date,
-    },
-    endDate: {
-      type: Date,
+      ref: 'Policy',
+      required: true,
     },
     status: {
       type: String,
       enum: ['pending', 'active', 'expired', 'rejected'],
-      default: 'active',
+      default: 'pending',
     },
   },
   { _id: true }
@@ -83,13 +44,16 @@ const customerSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Company',
     },
-    policies: [customerPolicySchema],
+    policies: [customerPolicyRefSchema],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
   },
-  { timestamps: true }
+  { timestamps: true, indexes: [
+    { aadharNumber: 1 },
+    { company: 1 },
+  ] }
 );
 
 module.exports = mongoose.model('Customer', customerSchema);

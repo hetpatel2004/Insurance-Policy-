@@ -99,9 +99,7 @@ const AdminDashboard = () => {
   const [showSuggestModal, setShowSuggestModal] = useState(false)
   const [suggestTarget, setSuggestTarget] = useState(null)
   const [userQuery, setUserQuery] = useState('')
-  const [userSearch, setUserSearch] = useState('')
   const [policyQuery, setPolicyQuery] = useState('')
-  const [policySearch, setPolicySearch] = useState('')
 
   const admin = getUser()
 
@@ -523,7 +521,7 @@ const AdminDashboard = () => {
 
   const renderUsers = () => {
     const userList = users.filter(u => u.role === 'user')
-    const term = userSearch.trim().toLowerCase()
+    const term = userQuery.trim().toLowerCase()
     const filteredUsers = userList.filter(u =>
       !term ||
       `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
@@ -543,15 +541,14 @@ const AdminDashboard = () => {
                   placeholder="Search by name, email or aadhar..."
                   value={userQuery}
                   onChange={e => setUserQuery(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') setUserSearch(userQuery) }}
                   style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '0.85rem', padding: '0.42rem 0.85rem', minWidth: '200px' }}
                 />
-                <Button size="sm" className="rounded-pill border-0" onClick={() => setUserSearch(userQuery)} style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', marginRight: '4px' }} title="Search">
+                <Button size="sm" className="rounded-pill border-0" onClick={() => {}} style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', marginRight: '4px' }} title="Search">
                   <Search size={14} />
                 </Button>
               </div>
               {term && (
-                <Button size="sm" variant="outline" className="rounded-pill" onClick={() => { setUserSearch(''); setUserQuery('') }} style={{ border: '1px solid var(--border-strong)', color: 'var(--text-muted-2)' }}>Clear</Button>
+                <Button size="sm" variant="outline" className="rounded-pill" onClick={() => setUserQuery('')} style={{ border: '1px solid var(--border-strong)', color: 'var(--text-muted-2)' }}>Clear</Button>
               )}
               <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(96,165,250,0.1)', color: 'var(--primary-light)' }}>{term ? `${filteredUsers.length}/${userList.length} Users` : `${userList.length} Users`}</Badge>
             <Button className="rounded-pill gradient-bg border-0 px-3" onClick={openCreateUser}>
@@ -652,7 +649,7 @@ const AdminDashboard = () => {
   }
 
   const renderPolicies = () => {
-    const term = policySearch.trim().toLowerCase()
+    const term = policyQuery.trim().toLowerCase()
     const filteredPolicies = policies.filter(p =>
       !term ||
       `${p.user?.firstName} ${p.user?.lastName}`.toLowerCase().includes(term) ||
@@ -673,15 +670,14 @@ const AdminDashboard = () => {
                   placeholder="Search by customer, plan, type or company..."
                   value={policyQuery}
                   onChange={e => setPolicyQuery(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') setPolicySearch(policyQuery) }}
                   style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '0.85rem', padding: '0.42rem 0.85rem', minWidth: '200px' }}
                 />
-                <Button size="sm" className="rounded-pill border-0" onClick={() => setPolicySearch(policyQuery)} style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', marginRight: '4px' }} title="Search">
+                <Button size="sm" className="rounded-pill border-0" onClick={() => {}} style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', marginRight: '4px' }} title="Search">
                   <Search size={14} />
                 </Button>
               </div>
               {term && (
-                <Button size="sm" variant="outline" className="rounded-pill" onClick={() => { setPolicySearch(''); setPolicyQuery('') }} style={{ border: '1px solid var(--border-strong)', color: 'var(--text-muted-2)' }}>Clear</Button>
+                <Button size="sm" variant="outline" className="rounded-pill" onClick={() => setPolicyQuery('')} style={{ border: '1px solid var(--border-strong)', color: 'var(--text-muted-2)' }}>Clear</Button>
               )}
               <Badge bg="none" className="rounded-pill px-3 py-1" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>{term ? `${filteredPolicies.length}/${policies.length} Policies` : `${policies.length} Policies`}</Badge>
             <Button variant="outline-primary" className="rounded-pill px-3" onClick={() => setBulkTarget('policies')} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>

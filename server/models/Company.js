@@ -37,7 +37,10 @@ const companySchema = new mongoose.Schema(
       ref: 'User',
     },
   },
-  { timestamps: true }
+  { timestamps: true, indexes: [
+    { name: 1 },
+    { policyTypes: 1 },
+  ] }
 );
 
 module.exports = mongoose.model('Company', companySchema);

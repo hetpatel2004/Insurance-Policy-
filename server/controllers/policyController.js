@@ -12,19 +12,42 @@ const createPolicy = async (req, res) => {
       return res.status(400).json({ message: 'All policy fields are required' });
     }
 
+    // Validate premium and coverage are positive numbers
+    const premiumNum = Number(premium);
+    const coverageNum = Number(coverage);
+    if (isNaN(premiumNum) || premiumNum < 0) {
+      return res.status(400).json({ message: 'Premium must be a positive number' });
+    }
+    if (isNaN(coverageNum) || coverageNum < 0) {
+      return res.status(400).json({ message: 'Coverage must be a positive number' });
+    }
+
+    // If company is provided, validate policy type compatibility
+    let companyId = company;
+    if (company) {
+      const comp = await Company.findById(company);
+      if (!comp) {
+        return res.status(404).json({ message: 'Company not found' });
+      }
+      if (comp.policyTypes.length > 0 && !comp.policyTypes.includes(policyType)) {
+        return res.status(400).json({ message: `${policyType} is not offered by ${comp.name}` });
+      }
+      companyId = comp._id;
+    }
+
     const policy = await Policy.create({
       user: req.user._id,
       policyType,
       planName,
-      premium,
-      coverage,
-      company,
+      premium: premiumNum,
+      coverage: coverageNum,
+      company: companyId,
       status: 'pending',
     });
 
     res.status(201).json(policy);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -66,18 +89,27 @@ const updatePolicy = async (req, res) => {
     }
 
     const { status, premium, coverage, planName, company } = req.body;
-    if (status && ['pending', 'active', 'expired', 'rejected'].includes(status)) {
+
+    // Preserve existing dates unless administrator intentionally changes them
+    // Only set startDate/endDate when transitioning from pending to active
+    if (status && status === 'active' && policy.status !== 'active') {
+      const now = new Date();
+      const end = new Date(now);
+      end.setFullYear(end.getFullYear() + 1);
+      policy.startDate = now;
+      policy.endDate = end;
+    } else if (status && status !== 'active') {
+      // For non-active statuses, preserve existing dates (historical record)
       policy.status = status;
-      if (status === 'active') {
-        const now = new Date();
-        const end = new Date(now);
-        end.setFullYear(end.getFullYear() + 1);
-        policy.startDate = policy.startDate || now;
-        policy.endDate = end;
-      }
     }
-    policy.premium = premium || policy.premium;
-    policy.coverage = coverage || policy.coverage;
+
+    // Validate endDate > startDate if both are set
+    if (policy.startDate && policy.endDate && policy.endDate <= policy.startDate) {
+      return res.status(400).json({ message: 'End date must be after start date' });
+    }
+
+    policy.premium = premium !== undefined ? premium : policy.premium;
+    policy.coverage = coverage !== undefined ? coverage : policy.coverage;
     policy.planName = planName || policy.planName;
     if (company !== undefined) policy.company = company;
 
@@ -136,6 +168,19 @@ const bulkCreatePolicies = async (req, res) => {
           errors.push({ row: i + 2, error: 'policyType, planName, premium and coverage are required' });
           continue;
         }
+        // Validate premium and coverage are positive numbers
+        const premiumNum = Number(r.premium);
+        const coverageNum = Number(r.coverage);
+        if (isNaN(premiumNum) || premiumNum < 0) {
+          skipped++;
+          errors.push({ row: i + 2, error: 'Premium must be a positive number' });
+          continue;
+        }
+        if (isNaN(coverageNum) || coverageNum < 0) {
+          skipped++;
+          errors.push({ row: i + 2, error: 'Coverage must be a positive number' });
+          continue;
+        }
         if (!POLICY_TYPES.includes(type)) {
           skipped++;
           errors.push({ row: i + 2, error: `"${r.policyType}" is not a valid insurance type` });
@@ -147,6 +192,12 @@ const bulkCreatePolicies = async (req, res) => {
           if (!company) {
             skipped++;
             errors.push({ row: i + 2, error: `Company "${r.companyName}" not found` });
+            continue;
+          }
+          // Validate that the company offers this policy type
+          if (company.policyTypes.length > 0 && !company.policyTypes.includes(type)) {
+            skipped++;
+            errors.push({ row: i + 2, error: `Company "${company.name}" does not offer ${type} insurance` });
             continue;
           }
         }

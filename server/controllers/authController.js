@@ -25,6 +25,10 @@ const registerUser = async (req, res) => {
       });
     }
 
+    if (!firstName || !lastName || !aadharNumber || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
     const aadharExists = await User.findOne({ aadharNumber });
     if (aadharExists) {
       return res.status(400).json({ message: 'Aadhar number already registered' });
@@ -47,9 +51,11 @@ const registerUser = async (req, res) => {
 
     if (user) {
       res.status(201).json({ ...sanitizeUser(user), token: generateToken(user._id) });
+    } else {
+      return res.status(500).json({ message: 'Failed to create user' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -122,6 +128,10 @@ const updateProfile = async (req, res) => {
     }
 
     const { firstName, lastName, phone } = req.body;
+    if (!firstName && !lastName && !phone && !req.body.password) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.phone = phone || user.phone;
@@ -136,7 +146,7 @@ const updateProfile = async (req, res) => {
     const updated = await user.save();
     res.json(sanitizeUser(updated));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

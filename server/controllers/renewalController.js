@@ -138,8 +138,26 @@ const updateSuggestionStatus = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
+    const oldStatus = suggestion.status;
     suggestion.status = status;
     const updated = await suggestion.save();
+
+    // If suggestion is accepted, update the associated policy
+    if (status === 'accepted' && oldStatus !== 'accepted') {
+      await Policy.findByIdAndUpdate(suggestion.policy, {
+        status: 'active',
+      });
+      // Renew the policy end date (extend by 1 year)
+      const policy = await Policy.findById(suggestion.policy);
+      if (policy.status === 'active' && policy.endDate) {
+        const now = new Date();
+        const end = new Date(now);
+        end.setFullYear(end.getFullYear() + 1);
+        policy.endDate = end;
+        await policy.save();
+      }
+    }
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: error.message });

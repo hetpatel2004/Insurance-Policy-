@@ -50,7 +50,11 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true, indexes: [
+    { aadharNumber: 1 },
+    { email: 1 },
+    { role: 1 },
+  ] }
 );
 
 userSchema.pre('save', async function () {

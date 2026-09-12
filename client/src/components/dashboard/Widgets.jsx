@@ -1,7 +1,7 @@
 import { Card, Badge } from 'react-bootstrap'
 import { motion } from 'framer-motion'
 
-export const StatCard = ({ icon: Icon, label, value, color = '#60a5fa', delay = 0 }) => (
+export const StatCard = ({ icon: IconComponent, label, value, color = '#60a5fa', delay = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -23,7 +23,7 @@ export const StatCard = ({ icon: Icon, label, value, color = '#60a5fa', delay = 
             flexShrink: 0,
           }}
         >
-          <Icon size={24} />
+          <IconComponent size={24} />
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 'clamp(1.4rem, 3vw, 1.8rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>
@@ -72,9 +72,9 @@ export const StatusBadge = ({ status }) => {
   )
 }
 
-export const EmptyState = ({ icon, title, subtitle }) => (
+export const EmptyState = ({ icon: IconComponent, title, subtitle }) => (
   <div className="text-center py-5">
-    <icon size={48} color="var(--text-muted-3)" style={{ opacity: 0.6 }} />
+    <IconComponent size={48} color="var(--text-muted-3)" style={{ opacity: 0.6 }} />
     <h6 style={{ color: 'var(--text-primary)', fontWeight: 700, marginTop: '16px' }}>{title}</h6>
     {subtitle && <p style={{ color: 'var(--text-muted-2)', fontSize: '0.85rem', margin: 0 }}>{subtitle}</p>}
   </div>
