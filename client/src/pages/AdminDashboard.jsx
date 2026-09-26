@@ -426,7 +426,7 @@ const AdminDashboard = () => {
   const renderOverview = () => (
     <>
       <PageHeader
-        title={`Welcome back, ${admin?.firstName} ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹`}
+        title={`Welcome back, ${admin?.firstName}`}
         subtitle="Here's what's happening in your insurance portfolio today."
         badge={
           <span className="rounded-pill px-3 py-1" style={{ background: 'rgba(52,211,153,0.1)', color: '#34d399', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -709,7 +709,7 @@ const AdminDashboard = () => {
                     <tr key={p._id} style={{ verticalAlign: 'middle' }}>
                       <td>
                         <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.user?.firstName} {p.user?.lastName}</div>
-                        <div className="d-md-none" style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{getPolicyLabel(p.policyType)} Ãƒâ€šÃ‚Â· ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¹{p.premium}</div>
+                        <div className="d-md-none" style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{getPolicyLabel(p.policyType)} {p.premium}</div>
                       </td>
                       <td className="d-none d-md-table-cell">{getPolicyLabel(p.policyType)}</td>
                       <td style={{ fontSize: '0.85rem' }}>{p.planName}</td>
@@ -982,17 +982,17 @@ const AdminDashboard = () => {
                           </div>
                           <div>
                             <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{c.name}</div>
-                            <div className="d-md-none" style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>{c.phone || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</div>
+                            <div className="d-md-none" style={{ fontSize: '0.72rem', color: 'var(--text-muted-2)' }}>{c.phone}</div>
                           </div>
                         </div>
                       </td>
                       <td className="d-none d-md-table-cell">
-                        <div style={{ fontSize: '0.85rem' }}>{c.email || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{c.phone || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</div>
+                        <div style={{ fontSize: '0.85rem' }}>{c.email}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted-2)' }}>{c.phone}</div>
                       </td>
                       <td className="d-none d-lg-table-cell">
                         {(c.policyTypes || []).length === 0 ? (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-2)' }}>ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-2)' }}>No policies</span>
                         ) : (
                           <div className="d-flex flex-wrap gap-1" style={{ maxWidth: '280px' }}>
                             {(c.policyTypes || []).slice(0, 3).map(t => (
@@ -1008,7 +1008,7 @@ const AdminDashboard = () => {
                           </div>
                         )}
                       </td>
-                      <td className="d-none d-xl-table-cell" style={{ fontSize: '0.85rem', maxWidth: '220px' }}>{c.description || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</td>
+                      <td className="d-none d-xl-table-cell" style={{ fontSize: '0.85rem', maxWidth: '220px' }}>{c.description}</td>
                       <td>
                         <div className="d-flex justify-content-end gap-2">
                           <Button size="sm" variant="outline-primary" className="rounded-pill" onClick={() => openCompanyModal(c)} style={{ borderColor: 'rgba(96,165,250,0.3)', color: '#60a5fa' }}>
