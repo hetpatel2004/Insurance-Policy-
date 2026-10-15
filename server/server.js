@@ -14,6 +14,7 @@ const contactRoutes = require('./routes/contactRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const path = require('path');
 
 // Rate limiting
 const limiter = rateLimit({
@@ -57,6 +58,14 @@ app.use('/api/contact', contactRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'SecureLife API is running' });
 });
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+}
 
 // 404 handler
 app.use((req, res) => {
