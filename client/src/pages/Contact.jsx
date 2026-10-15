@@ -14,13 +14,15 @@ const contactInfo = [
   { icon: Clock, title: 'Working Hours', value: 'Mon–Sat: 9am – 8pm', sub: '24/7 claim support' },
 ]
 
+const BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, '') : '';
+
 const Contact = () => {
   const [sending, setSending] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
     setSending(true)
-    fetch('/api/contact', {
+    fetch(`${BASE_URL}/api/contact`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

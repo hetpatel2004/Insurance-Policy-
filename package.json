@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "SecureLife Insurance - MERN Stack Web Application",
   "scripts": {
+    "start": "node server/server.js",
     "client": "npm run dev --prefix client",
     "server": "npm run dev --prefix server",
     "dev": "npm run client & npm run server",

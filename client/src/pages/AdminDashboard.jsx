@@ -3,7 +3,7 @@ import { Card, Table, Button, Badge, Form, Modal, Spinner } from 'react-bootstra
 import { motion } from 'framer-motion'
 import {
   Speedometer2, PeopleFill, FileEarmarkTextFill,
-  PencilSquare, Trash, PersonFill, ShieldFillCheck,
+  PencilSquare, Trash, ShieldFillCheck,
   FileEarmarkText, ClockHistory, BuildingFill,
   PersonBadgeFill, PlusCircleFill, XCircle, CloudUploadFill,
   CurrencyRupee, Check2, ArrowRepeat, EnvelopePlus, Search

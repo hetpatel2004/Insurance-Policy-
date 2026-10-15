@@ -1,8 +1,9 @@
-const API_URL = '/api/auth';
-const POLICY_URL = '/api/policies';
-const COMPANY_URL = '/api/companies';
-const CUSTOMER_URL = '/api/customers';
-const RENEWAL_URL = '/api/renewals';
+const BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, '') : '';
+const API_URL = `${BASE_URL}/api/auth`;
+const POLICY_URL = `${BASE_URL}/api/policies`;
+const COMPANY_URL = `${BASE_URL}/api/companies`;
+const CUSTOMER_URL = `${BASE_URL}/api/customers`;
+const RENEWAL_URL = `${BASE_URL}/api/renewals`;
 
 const getToken = () => localStorage.getItem('token');
 const getUser = () => {

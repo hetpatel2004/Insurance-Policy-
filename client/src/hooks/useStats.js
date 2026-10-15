@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 
-let cached = null
+const BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, '') : '';
+let cached = null;
 
 const getStats = async () => {
   if (cached) return cached
-  const res = await fetch('/api/stats')
+  const res = await fetch(`${BASE_URL}/api/stats`)
   if (!res.ok) throw new Error('Failed to load stats')
   cached = await res.json()
   return cached

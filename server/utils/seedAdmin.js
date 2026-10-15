@@ -1,3 +1,5 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -45,9 +47,8 @@ const upsert = async (data) => {
     console.log(`  - Updated: ${data.email}`);
     return;
   }
-  const salt = await bcrypt.genSalt(12);
-  const hashedPassword = await bcrypt.hash('admin123', salt);
-  await User.create({ ...data, password: hashedPassword });
+  const defaultPassword = process.env.ADMIN_SEED_PASSWORD || 'admin123';
+  await User.create({ ...data, password: defaultPassword });
   console.log(`  - Created: ${data.email}`);
 };
 

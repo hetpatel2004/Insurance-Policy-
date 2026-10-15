@@ -98,7 +98,8 @@ const updatePolicy = async (req, res) => {
       end.setFullYear(end.getFullYear() + 1);
       policy.startDate = now;
       policy.endDate = end;
-    } else if (status && status !== 'active') {
+      policy.status = 'active';
+    } else if (status) {
       // For non-active statuses, preserve existing dates (historical record)
       policy.status = status;
     }
