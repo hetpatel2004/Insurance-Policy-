@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
 const express = require('express');
@@ -61,15 +62,28 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'SecureLife API is running' });
 });
 
-// Serve static files in production
+// Serve static files in production if client build exists
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  app.get('{*splat}', (req, res, next) => {
-    if (req.path.startsWith('/api')) {
-      return next();
-    }
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-  });
+  const clientDistPath = path.join(__dirname, '../client/dist');
+  const indexPath = path.join(clientDistPath, 'index.html');
+
+  if (fs.existsSync(indexPath)) {
+    app.use(express.static(clientDistPath));
+    app.get('{*splat}', (req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      res.sendFile(indexPath);
+    });
+  } else {
+    app.get('/', (req, res) => {
+      res.json({
+        status: 'ok',
+        message: 'SecureLife API server is running',
+        health: '/api/health',
+      });
+    });
+  }
 }
 
 // 404 handler
